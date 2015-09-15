@@ -1,0 +1,25 @@
+﻿La génération a démarré 15/09/2015 09:43:24.
+     1>Projet "D:\Developpement\Parrellele\Metallica\ConsoleApplication1\ConsoleApplication1\ConsoleApplication1.vcxproj" sur le nœud 2 (Build cible(s)).
+     1>ClCompile:
+         E:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /openmp /Yc"stdafx.h" /Fp"Debug\Metallica.pch" /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt stdafx.cpp
+         stdafx.cpp
+         E:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /openmp /Yu"stdafx.h" /Fp"Debug\Metallica.pch" /Fo"Debug\\" /Fd"Debug\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt Cell.cpp Metallica.cpp Grid.cpp
+         Grid.cpp
+     1>d:\developpement\parrellele\metallica\consoleapplication1\consoleapplication1\grid.cpp(88): warning C4172: retourne l'adresse d'une variable locale ou temporaire
+     1>d:\developpement\parrellele\metallica\consoleapplication1\consoleapplication1\grid.cpp(148): warning C4172: retourne l'adresse d'une variable locale ou temporaire
+         Metallica.cpp
+     1>d:\developpement\parrellele\metallica\consoleapplication1\consoleapplication1\metallica.cpp(60): warning C4101: 'j' : variable locale non référencée
+     1>d:\developpement\parrellele\metallica\consoleapplication1\consoleapplication1\metallica.cpp(62): warning C4101: 'j' : variable locale non référencée
+         Cell.cpp
+         Génération de code en cours...
+       Link:
+         E:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\Developpement\Parrellele\Metallica\ConsoleApplication1\Debug\Metallica.exe" /INCREMENTAL /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"D:\Developpement\Parrellele\Metallica\ConsoleApplication1\Debug\Metallica.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\Developpement\Parrellele\Metallica\ConsoleApplication1\Debug\Metallica.lib" /MACHINE:X86 Debug\Cell.obj
+         Debug\Metallica.obj
+         Debug\Grid.obj
+         Debug\stdafx.obj
+         ConsoleApplication1.vcxproj -> D:\Developpement\Parrellele\Metallica\ConsoleApplication1\Debug\Metallica.exe
+     1>Génération du projet "D:\Developpement\Parrellele\Metallica\ConsoleApplication1\ConsoleApplication1\ConsoleApplication1.vcxproj" terminée (Build cible(s)).
+
+La génération a réussi.
+
+Temps écoulé 00:00:01.34
