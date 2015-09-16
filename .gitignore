@@ -26,3 +26,9 @@
 *.exe
 *.out
 *.app
+
+#Visual 2015 files
+ConsoleApplication1/ConsoleApplication1.sdf
+ConsoleApplication1/ConsoleApplication1/ConsoleApplication1.vcxproj
+ConsoleApplication1/.vs/
+ConsoleApplication1/ConsoleApplication1.opensdf
