@@ -1,14 +1,13 @@
-//#include <iostream>
+#include <iostream>
 #include <mpi.h>
 #include <stdio.h>
-//#include "Cell.h"
-//#include "Grid.h"
-//#include <omp.h>
+#include "Cell.h"
+#include "Grid.h"
+#include <omp.h>
 
 using namespace std;
 
 //global
-/*
 Grid startingTemperatures;
 Grid endingTemperatures;
 int rows = 3;
@@ -18,22 +17,27 @@ float ambientTemperature = 20;
 void initialiseTemperatures();
 void printGrid(Grid grid);
 Grid decreaseTemperature(Grid grid);
-*/
+
 int main(int argc, char *argv[])
 {
+    initialiseTemperatures();
+
+	printGrid(startingTemperatures);
+	cout << endl;
+
 	printf("Pere : Je suis VIVAAAAAAAANT.\n");
-	int i, compteur, errCodes[7];
+	int i, compteur, errCodes[10];
 	MPI_Status etat;
 	MPI_Comm intercomm;
 
 	char *cmds[2] = {
-		"./prg1",
-		"./prg2",
+		"./coordinateur",
+		"./esclave",
 	};
 
 	int nbInstances[2] = {
-		2,
-		5
+		1,
+		9
 	};
 
 	MPI_Info infos[2] = {
@@ -57,7 +61,7 @@ int main(int argc, char *argv[])
 	printf("Pere : Toutes les instances sont lancees.\n");
 
 	// Communication pere -> fils
-	for (i=0; i<7; i++)
+	for (i=0; i<10; i++)
 	{
 		MPI_Send (&compteur, 1, MPI_INT, i, 0, intercomm);
 		printf ("Pere   : Envoi vers %d.\n", i);
@@ -70,11 +74,6 @@ int main(int argc, char *argv[])
 	return 0;
 
 	/*
-	initialiseTemperatures();
-
-	printGrid(startingTemperatures);
-	cout << endl;
-
 	for (int i = 0; i < 10; i++){
 		startingTemperatures = decreaseTemperature(startingTemperatures);
 		printGrid(startingTemperatures);
@@ -96,7 +95,7 @@ int main(int argc, char *argv[])
 	return 0;
 	*/
 }
-/*
+
 Grid decreaseTemperature(Grid grid) {
 	Grid returnGrid;
 	returnGrid.setRows(rows);
@@ -119,12 +118,11 @@ Grid decreaseTemperature(Grid grid) {
 	}
 	return returnGrid;
 }
-*/
+
 /* Initialise :
 les temperature dans la matrice de métal 3x3 de départ
 les temperature de la matrice de refroidissement
 */
-/*
 void initialiseTemperatures()
 {
 	startingTemperatures.setRows(rows);
@@ -177,6 +175,5 @@ void printGrid(Grid grid)
 		cout << endl;
 	}
 }
-*/
 
 
