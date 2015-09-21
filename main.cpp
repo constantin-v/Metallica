@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
 	cout << endl;
 
 	printf("Pere : Je suis VIVAAAAAAAANT.\n");
-	int i, compteur, errCodes[10];
+	int i, compteur, errCodes[cols * rows];
 	char returnCodeFromChildren;
 	MPI_Status etat;
 	MPI_Comm intercomm;
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 
 	int nbInstances[2] = {
 		1,
-		9
+		cols * rows
 	};
 
 	MPI_Info infos[2] = {
@@ -62,54 +62,31 @@ int main(int argc, char *argv[])
 
 	printf("Pere : Toutes les instances sont lancees.\n");
 
-
     //Communication pere --> coordinateur
     float temperatureAmbiantToSend = startingTemperatures.getAmbientTemperature();
-
+    printf ("Pere : Envoi vers le coordinateur de la temperature ambiante (%f°C)\n", temperatureAmbiantToSend);
     MPI_Send (&temperatureAmbiantToSend, 1, MPI_FLOAT, 0, 0, intercomm);
-    printf ("Pere : Envoi vers coordinateur \n");
 
 
 	// Communication pere -> fils
-	for (i=1; i< rows * cols; i++)	{
 
-        float temperatureToSend = startingTemperatures.getCell(i-1).getTemperature();
+	float temperatureToSend;
+	for (i=1; i< rows * cols + 1; i++)	{
+        temperatureToSend = startingTemperatures.getCell(i-1).getTemperature();
+        //printf ("Pere : Envoi vers l'esclave n°%d de sa temperature case (%f°C).\n", i, temperatureToSend);
 
 		MPI_Send (&temperatureToSend, 1, MPI_FLOAT, i, 0, intercomm);
-		printf ("Pere : Envoi vers esclave %d.\n", i);
 	}
 
+    MPI_Recv(&returnCodeFromChildren, 1, MPI_CHAR,0, 0, intercomm, &etat);
+    printf ("Pere : Reception du coordinateur : %c \n", returnCodeFromChildren);
 
-        MPI_Recv(&returnCodeFromChildren, 1, MPI_CHAR,0, 0, intercomm, &etat);
-		printf ("Pere : Reception du coordinateur : %c \n", returnCodeFromChildren);
 
-
-	printf ("Pere   : Fin.\n");
+	printf ("Pere : Fin.\n");
 
 	MPI_Finalize();
 	return 0;
 
-	/*
-	for (int i = 0; i < 10; i++){
-		startingTemperatures = decreaseTemperature(startingTemperatures);
-		printGrid(startingTemperatures);
-		cout << endl;
-	}
-
-	// Lit les températures de départ
-
-	// Détermine un ensemble de températures à fournir aux threads esclaves
-
-	// Thread esclave récupère les températures de ses voisins et de lui-meme
-
-	// Thread calcule sa nouvelle température
-
-	// Thread lenregistre dans le tableau final
-
-	char* t = { "b" };
-	scanf_s(t);
-	return 0;
-	*/
 }
 
 Grid decreaseTemperature(Grid grid) {
@@ -148,11 +125,11 @@ void initialiseTemperatures()
 
 	int i;
 	int j;
-	for (i = 0; i<3; i++)
+	for (i = 0; i<rows; i++)
 	{
-		for (j = 0; j<3; j++)
+		for (j = 0; j<cols; j++)
 		{
-			if (i == 1 && j == 1)
+			if (i == 1 && j == 2)
 			{
 				// startingTemperatures.grid[i][j].setTemperature(50);
 				startingTemperatures.getCell(i, j).setTemperature(50);
@@ -170,9 +147,9 @@ void initialiseTemperatures()
 	endingTemperatures.setAmbientTemperature(ambientTemperature);
 	endingTemperatures.allocateGridTab();
 
-	for (i = 0; i<3; i++)
+	for (i = 0; i<rows; i++)
 	{
-		for (j = 0; j<3; j++)
+		for (j = 0; j<cols; j++)
 		{
 			endingTemperatures.getCell(i, j).setTemperature(0.0f);
 		}
