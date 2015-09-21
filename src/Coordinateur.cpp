@@ -1,5 +1,11 @@
 #include <mpi.h>
 #include <stdio.h>
+#include <iostream>
+#include <fstream>
+
+using namespace std;
+
+int step = 0;
 
 void printGrid(float* table, int rows, int cols)
 {
@@ -14,6 +20,45 @@ void printGrid(float* table, int rows, int cols)
 		}
 		printf("\n");
 	}
+}
+
+void printSVG(float* table, int rows, int cols)
+{
+	int widthRectangle = 20;
+	int heightRectangle = 20;
+	int widthTotal = cols * widthRectangle;
+	int heightTotal = rows * heightRectangle;
+	
+	std::string name = "Metallica" + std::to_string(step) + ".html";	
+	std::ofstream outfile (name);
+	outfile << "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?>";
+	outfile << "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" ";
+	outfile << "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">";
+	outfile << "<html xmlns=\"http://www.w3.org/1999/xhtml\"> ";
+	outfile << "<head>";
+	outfile << "<title>Refroidissement d'une plaque de métal</title>";
+	outfile << "</head>";
+	outfile << "<body>";
+	outfile << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\"";
+	outfile << "width=\"" << widthTotal << "px\" height=\""<< heightTotal <<"px\">" << std::endl;
+
+	int count = -1;
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < cols; j++)
+		{
+			count++;
+			float value = table[count];
+			int xpos = i * widthRectangle;
+			int ypos = j * heightRectangle;
+			outfile << "<rect x=\""<< xpos <<"\" y=\""<< ypos <<"\" width=\""<< widthRectangle <<"\" height=\""<< heightRectangle <<"\" fill=\"none\" stroke=\"black\"/>" << std::endl;
+		}
+		printf("\n");
+	}
+
+	outfile <<   "</svg> </body></html>" << std::endl;
+	outfile.close();
+	step++;
 }
 
 int main( int argc, char *argv[] )
@@ -60,6 +105,7 @@ int main( int argc, char *argv[] )
 			}
 						
 			printGrid(temperatures,rows,cols);
+			printSVG(temperatures,rows,cols);
 		}
 
 		char response = 'K';
