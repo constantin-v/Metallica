@@ -64,18 +64,18 @@ int main(int argc, char *argv[])
 
 
     //Communication pere --> coordinateur
-    float temperatureToSend = startingTemperatures.getAmbientTemperature();
-    cout << "Temps ambiante :" << temperatureToSend;
-    MPI_Isend (&temperatureToSend, 1, MPI_FLOAT, 0, 0, intercomm, &requestNull);
+    float temperatureAmbiantToSend = startingTemperatures.getAmbientTemperature();
+
+    MPI_Send (&temperatureAmbiantToSend, 1, MPI_FLOAT, 0, 0, intercomm);
     printf ("Pere : Envoi vers coordinateur \n");
 
 
 	// Communication pere -> fils
 	for (i=1; i<10; i++)	{
 
-        temperatureToSend = startingTemperatures.getCell(i-1).getTemperature();
+        float temperatureToSend = startingTemperatures.getCell(i-1).getTemperature();
 
-		MPI_Isend (&temperatureToSend, 1, MPI_FLOAT, i, 0, intercomm, &requestNull);
+		MPI_Send (&temperatureToSend, 1, MPI_FLOAT, i, 0, intercomm);
 		printf ("Pere : Envoi vers esclave %d.\n", i);
 	}
 

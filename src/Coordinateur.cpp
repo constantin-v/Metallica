@@ -18,14 +18,16 @@ int main( int argc, char *argv[] )
 		printf ("Coordinateur %d : Reception de la temperature ambiante %f !\n", myrank, temperature);
 		
 		for (int i=1; i<10; i++)	{
+			for (int j=1; j<10; j++)	{
 
-	        float temperatureToSend = temperature;        
+		        float temperatureToSend = temperature;        
 
-			MPI_Send (&temperatureToSend, 1, MPI_FLOAT, i, 0, parent);		
-			printf ("Coordinateur : Envoi vers esclave n%d.\n", i);
+				MPI_Send (&temperatureToSend, 1, MPI_FLOAT,j, 0, MPI_COMM_WORLD);		
+				printf ("Coordinateur : Envoi vers esclave n%d.\n", i);
 
-			MPI_Recv(&temperatureToSend, 1, MPI_FLOAT,0, 0, parent, &etat);
-			printf ("Coordinateur : Reception de esclave : %f \n", temperatureToSend);
+				MPI_Recv(&temperatureToSend, 1, MPI_FLOAT,j, 0, MPI_COMM_WORLD, &etat);
+				printf ("Coordinateur : Reception de esclave n%d: %f \n", i,temperatureToSend);
+			}
 
 		}
 

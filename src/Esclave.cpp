@@ -18,11 +18,11 @@ int main( int argc, char *argv[] )
 		MPI_Recv(&temperature, 1, MPI_FLOAT, 0, 0, parent, &etat);
         printf ("Esclave n°%d : Reception de la temperature case (%f°C) de la part du maitre !\n", myrank, temperature);
 
-        for(int i=0; i< 10; i++){
-        	MPI_Recv(&temperature, 1, MPI_FLOAT, 0, 0, parent, &etat);
+        for(int i=1; i< 10; i++){
+        	MPI_Recv(&temperature, 1, MPI_FLOAT, 0, 0, MPI_COMM_WORLD, &etat);
             printf ("Esclave n°%d : Reception de la temperature ambiante (%f°C) de la part du coordinateur !\n", myrank, temperature);
 
-            MPI_Send(&temperature, 1, MPI_FLOAT, 0, 0, parent);
+            MPI_Send(&temperature, 1, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
             printf ("Esclave n°%d : Envoi de la temperature ambiante (%f°C) au coordinateur !\n", myrank, temperature);
         }
 	}
