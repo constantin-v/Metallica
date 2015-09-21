@@ -62,29 +62,26 @@ int main(int argc, char *argv[])
 
 	printf("Pere : Toutes les instances sont lancees.\n");
 
-
     //Communication pere --> coordinateur
     float temperatureAmbiantToSend = startingTemperatures.getAmbientTemperature();
-
+    printf ("Pere : Envoi vers le coordinateur de la temperature ambiante (%f°C)\n", temperatureAmbiantToSend);
     MPI_Send (&temperatureAmbiantToSend, 1, MPI_FLOAT, 0, 0, intercomm);
-    printf ("Pere : Envoi vers coordinateur \n");
 
 
 	// Communication pere -> fils
+	float temperatureToSend;
 	for (i=1; i<10; i++)	{
-
-        float temperatureToSend = startingTemperatures.getCell(i-1).getTemperature();
-
+        temperatureToSend = startingTemperatures.getCell(i-1).getTemperature();
+        printf ("Pere : Envoi vers l'esclave n°%d de sa temperature case (%f°C).\n", i, temperatureToSend);
 		MPI_Send (&temperatureToSend, 1, MPI_FLOAT, i, 0, intercomm);
-		printf ("Pere : Envoi vers esclave %d.\n", i);
+
 	}
 
+    MPI_Recv(&returnCodeFromChildren, 1, MPI_CHAR,0, 0, intercomm, &etat);
+    printf ("Pere : Reception du coordinateur : %c \n", returnCodeFromChildren);
 
-        MPI_Recv(&returnCodeFromChildren, 1, MPI_CHAR,0, 0, intercomm, &etat);
-		printf ("Pere : Reception du coordinateur : %c \n", returnCodeFromChildren);
 
-
-	printf ("Pere   : Fin.\n");
+	printf ("Pere : Fin.\n");
 
 	MPI_Finalize();
 	return 0;
