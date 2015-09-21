@@ -62,30 +62,27 @@ int main(int argc, char *argv[])
 
 	printf("Pere : Toutes les instances sont lancees.\n");
 
+
+    //Communication pere --> coordinateur
+    float temperatureToSend = startingTemperatures.getAmbientTemperature();
+    cout << "Temps ambiante :" << temperatureToSend;
+    MPI_Isend (&temperatureToSend, 1, MPI_FLOAT, 0, 0, intercomm, &requestNull);
+    printf ("Pere : Envoi vers coordinateur \n");
+
+
 	// Communication pere -> fils
-	for (i=0; i<10; i++)	{
+	for (i=1; i<10; i++)	{
 
-        float temperatureToSend;
+        temperatureToSend = startingTemperatures.getCell(i-1).getTemperature();
 
-        if(i == 0){
-            //Si c'est le coordinateur
-            temperatureToSend = startingTemperatures.getAmbientTemperature();
-        } else {
-            //si c'est un esclave
-            temperatureToSend = startingTemperatures.getCell(i-1).getTemperature();
-        }
-
-        //cout << "Temperature envoyee:" << temperatureToSend;
 		MPI_Isend (&temperatureToSend, 1, MPI_FLOAT, i, 0, intercomm, &requestNull);
-		//MPI_Send (&temperatureToSend, 1, MPI_FLOAT, i, 0, intercomm);
-		printf ("Pere   : Envoi vers %d.\n", i);
+		printf ("Pere : Envoi vers esclave %d.\n", i);
 	}
 
-	for (i=0; i<10; i++)	{
-     //   MPI_Irecv(&returnCodeFromChildren, 1, MPI_CHAR,i, 0, intercomm, &(requestListe[i]));
-        MPI_Recv(&returnCodeFromChildren, 1, MPI_CHAR,i, 0, intercomm, &etat);
-		printf ("Pere : Reception de %d : %c \n", i, returnCodeFromChildren);
-	}
+
+        MPI_Recv(&returnCodeFromChildren, 1, MPI_CHAR,0, 0, intercomm, &etat);
+		printf ("Pere : Reception du coordinateur : %c \n", returnCodeFromChildren);
+
 
 	printf ("Pere   : Fin.\n");
 
