@@ -9,6 +9,7 @@ class Grid
         Grid();
         void addCell(int x, int y, float v);
         Cell& getCell(int x, int y);
+        Cell& getCell(int index);
         int getRows();
         void setRows(int v);
         int getCols();

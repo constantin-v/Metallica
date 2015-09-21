@@ -3,7 +3,8 @@
 
 int main( int argc, char *argv[] )
 {
-	int compteur, myrank;
+	int myrank;
+	float temperature;
 	MPI_Comm parent;
 	MPI_Status etat;
 	MPI_Init (&argc, &argv);
@@ -13,12 +14,14 @@ int main( int argc, char *argv[] )
 	if (parent == MPI_COMM_NULL) {
 		printf ("Esclave %d : Pas de pere !\n", myrank);
 	} else {
-		MPI_Recv(&compteur, 1, MPI_INT, 0, 0, parent, &etat);
-		printf ("Esclave %d : Reception du pere !\n", myrank);
-		MPI_Send(&compteur, 1, MPI_INT, 0, 0, parent);
+		MPI_Recv(&temperature, 1, MPI_FLOAT, 0, 0, parent, &etat);
+		printf ("Esclave %d : Reception de la temperature %f !\n", myrank, temperature);
+		char response = 'K';
+		MPI_Send(&response, 1, MPI_CHAR, 0, 0, parent);
 		printf ("Esclave %d : Envoi vers le pere !\n", myrank);
 	}
 
+printf ("Esclave %d : FIN !\n", myrank);
 	MPI_Finalize();
 	return 0;
 }

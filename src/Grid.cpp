@@ -43,6 +43,12 @@ Cell& Grid::getCell(int x, int y)
 	return grid[x][y];
 }
 
+Cell& Grid::getCell(int index)
+{
+    int *coords = getCoordinatesFromIndex(index);
+	return grid[coords[0]][coords[1]];
+}
+
 void Grid::addCell(int x, int y, float v)
 {
 	Cell cell;
@@ -129,11 +135,11 @@ float Grid::getTemperature(int x, int y)
 }
 
 int* Grid::getCoordinatesFromIndex(int index){
-	int coordinates[2];
+	int* coordinates = new int[2];
 	int count = -1;
 
-	for (int j = 0; j<this->getRows(); j++){
-		for (int k = 0; k<this->getCols(); k++){
+	for (int j = 0; j< getRows(); j++){
+		for (int k = 0; k< getCols(); k++){
 			count++;
 			if (count == index){
 				coordinates[0] = j;

@@ -27,8 +27,10 @@ int main(int argc, char *argv[])
 
 	printf("Pere : Je suis VIVAAAAAAAANT.\n");
 	int i, compteur, errCodes[10];
+	char returnCodeFromChildren;
 	MPI_Status etat;
 	MPI_Comm intercomm;
+	MPI_Request requestNull;
 
 	char *cmds[2] = {
 		"./coordinateur",
@@ -61,13 +63,30 @@ int main(int argc, char *argv[])
 	printf("Pere : Toutes les instances sont lancees.\n");
 
 	// Communication pere -> fils
-	for (i=0; i<10; i++)
-	{
-		MPI_Send (&compteur, 1, MPI_INT, i, 0, intercomm);
+	for (i=0; i<10; i++)	{
+
+        float temperatureToSend;
+
+        if(i == 0){
+            //Si c'est le coordinateur
+            temperatureToSend = startingTemperatures.getAmbientTemperature();
+        } else {
+            //si c'est un esclave
+            temperatureToSend = startingTemperatures.getCell(i-1).getTemperature();
+        }
+
+        //cout << "Temperature envoyee:" << temperatureToSend;
+		MPI_Isend (&temperatureToSend, 1, MPI_FLOAT, i, 0, intercomm, &requestNull);
+		//MPI_Send (&temperatureToSend, 1, MPI_FLOAT, i, 0, intercomm);
 		printf ("Pere   : Envoi vers %d.\n", i);
-		MPI_Recv(&compteur, 1, MPI_INT,i, 0, intercomm, &etat);
-		printf ("Pere   : Reception de %d.\n", i);
 	}
+
+	for (i=0; i<10; i++)	{
+     //   MPI_Irecv(&returnCodeFromChildren, 1, MPI_CHAR,i, 0, intercomm, &(requestListe[i]));
+        MPI_Recv(&returnCodeFromChildren, 1, MPI_CHAR,i, 0, intercomm, &etat);
+		printf ("Pere : Reception de %d : %c \n", i, returnCodeFromChildren);
+	}
+
 	printf ("Pere   : Fin.\n");
 
 	MPI_Finalize();
