@@ -5,6 +5,9 @@ int main( int argc, char *argv[] )
 {
 	int myrank;
 	float temperature;
+	float* temperatures;
+	int rows = 3;
+	int cols = 4;
 	MPI_Comm parent;
 	MPI_Status etat;
 	MPI_Init (&argc, &argv);
@@ -17,8 +20,10 @@ int main( int argc, char *argv[] )
 		MPI_Recv(&temperature, 1, MPI_FLOAT, 0, 0, parent, &etat);
 		printf ("Coordinateur %d : Reception de la temperature ambiante %f !\n", myrank, temperature);
 		
+		temperatures =  = new float[cols * rows];
+
 		for (int i=1; i<10; i++)	{
-			for (int j=1; j<10; j++)	{
+			for (int j=1; j<cols * rows; j++)	{
 
 		        float temperatureToSend = temperature;        
 
@@ -27,6 +32,8 @@ int main( int argc, char *argv[] )
 
 				MPI_Recv(&temperatureToSend, 1, MPI_FLOAT,j, 0, MPI_COMM_WORLD, &etat);
 				printf ("Coordinateur : Reception de esclave n%d: %f \n", i,temperatureToSend);
+
+				
 			}
 
 		}

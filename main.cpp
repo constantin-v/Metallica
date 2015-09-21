@@ -11,7 +11,7 @@ using namespace std;
 Grid startingTemperatures;
 Grid endingTemperatures;
 int rows = 3;
-int cols = 3;
+int cols = 4;
 float ambientTemperature = 20;
 
 void initialiseTemperatures();
@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 
 
 	// Communication pere -> fils
-	for (i=1; i<10; i++)	{
+	for (i=1; i< rows * cols; i++)	{
 
         float temperatureToSend = startingTemperatures.getCell(i-1).getTemperature();
 
