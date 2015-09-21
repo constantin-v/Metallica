@@ -64,13 +64,13 @@ int main(int argc, char *argv[])
 
     //Communication pere --> coordinateur
     float temperatureAmbiantToSend = startingTemperatures.getAmbientTemperature();
-    printf ("Pere : Envoi vers le coordinateur de la temperature ambiante (%f°C)\n", temperatureAmbiantToSend);
+    //printf ("Pere : Envoi vers le coordinateur de la temperature ambiante (%f°C)\n", temperatureAmbiantToSend);
     MPI_Send (&temperatureAmbiantToSend, 1, MPI_FLOAT, 0, 0, intercomm);
 
-    printf ("Pere : Envoi vers le coordinateur du nombre de lignes %d \n", rows);
+    //printf ("Pere : Envoi vers le coordinateur du nombre de lignes %d \n", rows);
     MPI_Send (&rows, 1, MPI_INT, 0, 0, intercomm);
 
-    printf ("Pere : Envoi vers le coordinateur du nombre de colonnes %d \n", cols);
+    //printf ("Pere : Envoi vers le coordinateur du nombre de colonnes %d \n", cols);
     MPI_Send (&cols, 1, MPI_INT, 0, 0, intercomm);
 
 	// Communication pere -> fils
@@ -81,10 +81,10 @@ int main(int argc, char *argv[])
         //printf ("Pere : Envoi vers l'esclave n°%d de sa temperature case (%f°C).\n", i, temperatureToSend);
 		MPI_Send (&temperatureToSend, 1, MPI_FLOAT, i, 0, intercomm);
 
-        printf ("Pere : Envoi du nombre de ligne vers l'esclave n%d \n", i);
+        //printf ("Pere : Envoi du nombre de ligne vers l'esclave n%d \n", i);
         MPI_Send (&rows, 1, MPI_INT, i, 0, intercomm);
 
-        printf ("Pere : Envoi du nombre de colonnes vers l'esclave n%d \n", i);
+        //printf ("Pere : Envoi du nombre de colonnes vers l'esclave n%d \n", i);
         MPI_Send (&cols, 1, MPI_INT, i, 0, intercomm);
 
 	}

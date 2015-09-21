@@ -19,23 +19,22 @@ float getAvgTemperature(float *temperatures, float temperatureCase)
 }
 
 int getIndexFromCoordinates(int x, int y){
-	int index = -1;
+	int index = 0;
 
 	for (int j = 0; j<rows; j++){
 		for (int k = 0; k<cols; k++){
 			index++;
 			if (x == j && y == k){
-				break;
+				return index;
 			}
 		}
 	}
-
-	return index;
+	return -1;
 }
 
-int* getCoordinatesFromIndex(int index){
+int* getCoordinatesFromIndex(int index){	
 	int* coordinates = new int[2];
-	int count = -1;
+	int count = 0;
 
 	for (int j = 0; j< rows; j++){
 		for (int k = 0; k< cols; k++){
@@ -43,11 +42,11 @@ int* getCoordinatesFromIndex(int index){
 			if (count == index){
 				coordinates[0] = j;
 				coordinates[1] = k;
-				break;
+				return coordinates;
 			}
 		}
 	}
-
+	//printf("Coordonnees ZZZZZZZZZZZZZZZZZZZZ %d;%d\n", coordinates[0], coordinates[1]);
 	return coordinates;
 }
 
@@ -62,26 +61,39 @@ bool areCoordinatesCorrect(int x, int y)
 
 int* getVoisins(int *coords)
 {
-	int *lotVoisins = new int[8];
+	int *lotVoisins = new int[9];
 	int i = 0, j, k;
 	for (j = coords[0] - 1; j <= (coords[0] + 1); j++)
 	{
 		for (k = coords[1] - 1; k <= (coords[1] + 1); k++)
 		{
-			if(areCoordinatesCorrect(j, k) && (j != coords[0] && k != coords[1])){
-				lotVoisins[i] = getIndexFromCoordinates(j, k);
-				i++;
+			if(areCoordinatesCorrect(j, k) && !(j == coords[0] && k == coords[1])) {				
+				lotVoisins[i] = getIndexFromCoordinates(j, k);								
+			} else {
+				lotVoisins[i] = 0;				
 			}
+			i++;
 		}
 	}
 	return lotVoisins;
+}
+
+int getNbVoisins(int *voisins){
+    int nbVoisins = 0;
+    for(int i=0; i<9; i++){
+        if(voisins[i] != 0){
+            nbVoisins++;
+        }
+    }
+
+    return nbVoisins;
 }
 
 
 
 int main( int argc, char *argv[] )
 {
-	int myrank,cols,rows;
+	int myrank;
 	float temperature, ambientTemperature;
 	MPI_Comm parent;
 	MPI_Status etat;
@@ -95,33 +107,45 @@ int main( int argc, char *argv[] )
 	} else {
 
 		MPI_Recv(&temperature, 1, MPI_FLOAT, 0, 0, parent, &etat);
-        printf ("Esclave n°%d : Reception de la temperature case (%f°C) de la part du maitre !\n", myrank, temperature);
+        //printf ("Esclave n°%d : Reception de la temperature case (%f°C) de la part du maitre !\n", myrank, temperature);
 
         MPI_Recv(&rows, 1, MPI_INT, 0, 0, parent, &etat);
-		printf ("Esclave n°%d : Reception du nombre de lignes %d !\n", myrank, rows);
+		//printf ("Esclave n°%d : Reception du nombre de lignes %d !\n", myrank, rows);
 
 		MPI_Recv(&cols, 1, MPI_INT, 0, 0, parent, &etat);
-		printf ("Esclave n°%d : Reception du nombre de colonnes %d !\n", myrank, cols);
-
-		int *coords = getCoordinatesFromIndex(myrank);
+		//printf ("Esclave n°%d : Reception du nombre de colonnes %d !\n", myrank, cols);
+		
+		int *coords = getCoordinatesFromIndex(myrank);		
+		//printf("Coordonnees esclave N°%d : %d;%d \n", myrank,coords[0],coords[1]);
 		int *voisins = getVoisins(coords);
 
         for(int i=1; i< 10; i++){
+        	//printf ("Esclave n°%d : Attente reception temperature ambiante!\n", myrank);
         	MPI_Recv(&ambientTemperature, 1, MPI_FLOAT, 0, 0, MPI_COMM_WORLD, &etat);
-            printf ("Esclave n°%d : Reception de la temperature ambiante (%f°C) de la part du coordinateur !\n", myrank, ambientTemperature);
+            //printf ("Esclave n°%d : Reception de la temperature ambiante (%f°C) de la part du coordinateur !\n", myrank, ambientTemperature);
 
             //Envoyer en asynchrone à tous ces voisins
-            int nbVoisins = sizeof(voisins)/sizeof(*voisins);
-            printf("Nombre de voisins de l'esclabe n°%d : %d \n", myrank, nbVoisins);
-            for(int rankVoisin = 0 ; rankVoisin < nbVoisins ; rankVoisin++){
-            	MPI_Isend(&temperature, 1, MPI_FLOAT, voisins[rankVoisin], 0, MPI_COMM_WORLD, &requestNull);
+            int nbVoisins = getNbVoisins(voisins);
+            int *tableauVoisinsTries = new int[8];
+            int compteur = 0;
+
+            //printf("Nombre de voisins de l'esclave n°%d : %d \n", myrank, nbVoisins);
+            for(int rankVoisin = 0 ; rankVoisin < 9 ; rankVoisin++){
+            	if(voisins[rankVoisin] != 0){
+            		MPI_Isend(&temperature, 1, MPI_FLOAT, voisins[rankVoisin], 0, MPI_COMM_WORLD, &requestNull);
+            		tableauVoisinsTries[compteur] = voisins[rankVoisin];
+            		compteur++;
+            		//printf("Message de esclave N°%d vers esclave %d \n",myrank, voisins[rankVoisin] );
+            	}
             }
 
             //Attendre réception des températures voisins en synchrone
             float *temperaturesVoisins = new float[8];
             for(int k = 0 ; k < nbVoisins ; k++){
             	float receivedTemp;
-            	MPI_Recv(&receivedTemp, 1, MPI_FLOAT, voisins[k], 0, MPI_COMM_WORLD, &etat);
+            	//printf("Message a recevoir de esclave N°%d \n", tableauVoisinsTries[k]);
+            	MPI_Recv(&receivedTemp, 1, MPI_FLOAT, tableauVoisinsTries[k], 0, MPI_COMM_WORLD, &etat);
+            	//printf("Message recu de esclave N°%d \n", tableauVoisinsTries[k]);
             	temperaturesVoisins[k] = receivedTemp;
             }
 
@@ -134,7 +158,7 @@ int main( int argc, char *argv[] )
             printf("L'esclave n°%d a mis a jour sa temperature : %f°C\n", myrank, temperature);
 
             MPI_Send(&temperature, 1, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
-            printf ("Esclave n°%d : Envoi de la temperature ambiante (%f°C) au coordinateur !\n", myrank, ambientTemperature);
+            //printf ("Esclave n°%d : Envoi de la temperature ambiante (%f°C) au coordinateur !\n", myrank, ambientTemperature);
         }
 	}
 

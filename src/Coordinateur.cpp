@@ -50,13 +50,15 @@ int main( int argc, char *argv[] )
 		        float temperatureToSend = temperature; 
 
 				//printf ("Coordinateur : Envoi vers l'esclave n°%d de la temperature ambiante (%f°C).\n", j, temperature);
-				MPI_Send (&temperature, 1, MPI_FLOAT,j, 0, MPI_COMM_WORLD);
-
-				MPI_Recv(&temperature, 1, MPI_FLOAT,j, 0, MPI_COMM_WORLD, &etat);
-				//printf ("Coordinateur : Reception de l'esclave n°%d: %f°C \n", j, temperature);
-				
-				temperatures[j-1] = temperature;
+				MPI_Send (&temperature, 1, MPI_FLOAT,j, 0, MPI_COMM_WORLD);					
 			}
+
+			for (int k=1; k<cols * rows + 1; k++)	{
+				MPI_Recv(&temperature, 1, MPI_FLOAT,k, 0, MPI_COMM_WORLD, &etat);
+				//printf ("Coordinateur : Reception de l'esclave n°%d: %f°C \n", k, temperature);
+				temperatures[k-1] = temperature;
+			}
+						
 			printGrid(temperatures,rows,cols);
 		}
 
