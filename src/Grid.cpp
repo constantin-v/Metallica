@@ -111,7 +111,7 @@ float Grid::getAvgTemperature(int x, int y)
 
 bool Grid::areCoordinatesCorrect(int x, int y)
 {
-	if (x >= 0 && x < 3 && y >= 0 && y < 3)
+	if (x >= 0 && x < rows && y >= 0 && y < cols)
 	{
 		return true;
 	}

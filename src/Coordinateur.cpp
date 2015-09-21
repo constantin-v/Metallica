@@ -21,8 +21,8 @@ int main( int argc, char *argv[] )
 	int myrank;
 	float temperature;
 	float* temperatures;
-	int rows = 3;
-	int cols = 4;
+	int rows = 2;
+	int cols = 2;
 	MPI_Comm parent;
 	MPI_Status etat;
 	MPI_Init (&argc, &argv);
@@ -33,8 +33,14 @@ int main( int argc, char *argv[] )
 		printf ("Coordinateur : Pas de pere !\n");
 	} else {
 		MPI_Recv(&temperature, 1, MPI_FLOAT, 0, 0, parent, &etat);
-
 		printf ("Coordinateur : Reception de la temperature ambiante %f !\n", temperature);
+
+		MPI_Recv(&rows, 1, MPI_INT, 0, 0, parent, &etat);
+		printf ("Coordinateur : Reception du nombre de lignes %d !\n", rows);
+
+		MPI_Recv(&cols, 1, MPI_INT, 0, 0, parent, &etat);
+		printf ("Coordinateur : Reception du nombre de colonnes %d !\n", cols);
+
 		
 		temperatures =  new float[cols * rows];
 
