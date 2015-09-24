@@ -143,12 +143,12 @@ void initialiseTemperatures()
 			if (i == 1 && j == 2)
 			{
 				// startingTemperatures.grid[i][j].setTemperature(50);
-				startingTemperatures.getCell(i, j).setTemperature(50);
+				startingTemperatures.getCell(i, j).setTemperature(90);
 			}
 			else
 			{
 				//startingTemperatures.grid[i][j].setTemperature(30);
-				startingTemperatures.getCell(i, j).setTemperature(30.0f);
+				startingTemperatures.getCell(i, j).setTemperature(44.0f);
 			}
 		}
 	}
