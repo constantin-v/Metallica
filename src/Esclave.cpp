@@ -95,19 +95,6 @@ int getNbVoisins(int *voisins){
     return nbVoisins;
 }
 
-void printGrid(Grid grid)
-{
-	for (int i = 0; i < rows; i++)
-	{
-		for (int j = 0; j < cols; j++)
-		{
-			float value = grid.getCell(i, j).getTemperature();
-			cout << value << "  ";
-		}
-		cout << endl;
-	}
-}
-
 
 
 Grid parseCharToGrid(char* gridChar){

@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
         //JALON 5
         //temperaturesToSend = startingTemperatures.getCell(i-1).getTemperature();
         //printf ("Pere : Envoi vers l'esclave n°%d de sa temperature case (%f°C).\n", i, temperatureToSend);
-		MPI_Send (&temperaturesToSend, 1, MPI_CHAR, i, 0, intercomm);
+		MPI_Send (&temperaturesToSend, 128, MPI_CHAR, i, 0, intercomm);
 
         //printf ("Pere : Envoi du nombre de ligne vers l'esclave n%d \n", i);
         MPI_Send (&rows, 1, MPI_INT, i, 0, intercomm);
