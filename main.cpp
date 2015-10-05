@@ -75,7 +75,18 @@ int main(int argc, char *argv[])
 
 	// Communication pere -> fils
 
-	char* temperatureToSend = "50.0f|50.0f|50.0f|50.0f|90.0f|50.0f|50.0f|50.0f|50.0f|";
+	float* temperatureToSend = new float[9];
+	temperatureToSend[0] = 50.0f;
+    temperatureToSend[1] = 50.0f;
+    temperatureToSend[2] = 50.0f;
+    temperatureToSend[3] = 50.0f;
+    temperatureToSend[4] = 90.0f;
+    temperatureToSend[5] = 50.0f;
+    temperatureToSend[6] = 50.0f;
+    temperatureToSend[7] = 50.0f;
+    temperatureToSend[8] = 50.0f;
+
+
 	for (i=1; i< rows * cols + 1; i++)	{
         //JALON 7
         //On crée un Grid 3x3 contenant les 9 témperatures de la case maître
@@ -84,7 +95,7 @@ int main(int argc, char *argv[])
         //JALON 5
         //temperatureToSend = startingTemperatures.getCell(i-1).getTemperature();
         //printf ("Pere : Envoi vers l'esclave n°%d de sa temperature case (%f°C).\n", i, temperatureToSend);
-		MPI_Send (&temperatureToSend, 128, MPI_CHAR, i, 0, intercomm);
+		MPI_Send (temperatureToSend, 9, MPI_FLOAT, i, 0, intercomm);
 
         //printf ("Pere : Envoi du nombre de ligne vers l'esclave n%d \n", i);
         MPI_Send (&rows, 1, MPI_INT, i, 0, intercomm);
