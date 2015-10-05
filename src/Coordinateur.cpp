@@ -182,10 +182,19 @@ int main( int argc, char *argv[] )
 				temperatures[k-1] = storeTemperature;
 				cout << "Coordinateur 9" << endl;
 			}
+            cout << "Temperature esclave n°" << myrank << ".Index:" << temperatures[0][0] << "."
+                                                                    << temperatures[0][1] << "/"
+                                                                    << temperatures[0][2] << "/"
+                                                                    << temperatures[0][3] << "/"
+                                                                    << temperatures[0][4] << "/"
+                                                                    << temperatures[0][5] << "/"
+                                                                    << temperatures[0][6] << "/"
+                                                                    << temperatures[0][7] << "/"
+                                                                    << temperatures[0][8] << "/"
+                                                                    << temperatures[0][9] << endl;
 
 			//printGrid(temperatures,rows,cols);
 			printSVG(temperatures,rows,cols, temperature);
-			cout << "Coordinateur 10" << endl;
 		}
 
 		char response = 'K';

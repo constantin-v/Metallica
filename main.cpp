@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
 	printf("Pere : Toutes les instances sont lancees.\n");
 
     //Communication pere --> coordinateur
-    float temperatureAmbiantToSend = startingTemperatures.getAmbientTemperature();
+    float temperatureAmbiantToSend = 20;
     //printf ("Pere : Envoi vers le coordinateur de la temperature ambiante (%f°C)\n", temperatureAmbiantToSend);
     MPI_Send (&temperatureAmbiantToSend, 1, MPI_FLOAT, 0, 0, intercomm);
 
@@ -111,29 +111,6 @@ int main(int argc, char *argv[])
 	MPI_Finalize();
 	return 0;
 
-}
-
-Grid decreaseTemperature(Grid grid) {
-	Grid returnGrid;
-	returnGrid.setRows(rows);
-	returnGrid.setCols(cols);
-	returnGrid.setAmbientTemperature(ambientTemperature);
-	returnGrid.allocateGridTab();
-	int i, j;
-
-	#pragma omp parallel private (i,j) shared (grid,returnGrid)
-	{
-		int cellNumber = rows * cols;
-
-		#pragma omp for
-		for (i = 0; i < cellNumber; i++){
-			int *coords = grid.getCoordinatesFromIndex(i);
-			float avgTemp = grid.getAvgTemperature(coords[0], coords[1]);
-			coords = grid.getCoordinatesFromIndex(i);
-			returnGrid.getCell(coords[0], coords[1]).setTemperature(avgTemp);
-		}
-	}
-	return returnGrid;
 }
 
 /* Initialise :

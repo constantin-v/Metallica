@@ -296,6 +296,8 @@ int main( int argc, char *argv[] )
             for(int rankVoisin = 0 ; rankVoisin < 9 ; rankVoisin++){
             	if(voisins[rankVoisin] != 0){
             		//MPI_Isend(&temperature, 1, MPI_FLOAT, voisins[rankVoisin], 0, MPI_COMM_WORLD, &requestNull);
+
+
             		MPI_Isend(gridFloat, 10, MPI_FLOAT, voisins[rankVoisin], 0, MPI_COMM_WORLD, &requestNull);
             		tableauVoisinsTries[compteur] = voisins[rankVoisin];
             		compteur++;
@@ -324,9 +326,22 @@ int main( int argc, char *argv[] )
             //On crée un tableau de 9x9 contenant les 9 grids crées précédemment
             //La case de l'esclave central se retrouve au millieu de ce tableau
             //On parcours la grid 3x3 centrale, en utilisant les cases à coté pour calculer la moyenne de chaque case
+
+            /*cout << "Temperature esclave n°" << myrank << ".Index:" << temperatures[0][0] << "."
+                                                                    << temperatures[0][1] << "/"
+                                                                    << temperatures[0][2] << "/"
+                                                                    << temperatures[0][3] << "/"
+                                                                    << temperatures[0][4] << "/"
+                                                                    << temperatures[0][5] << "/"
+                                                                    << temperatures[0][6] << "/"
+                                                                    << temperatures[0][7] << "/"
+                                                                    << temperatures[0][8] << "/"
+                                                                    << temperatures[0][9] << "/"
+                                                                    << temperatures[0][10] <<endl;*/
+
+
             temperatures[4] = getDecreasedTemperature(temperatures);
 
-            cout << "L'esclave n°" << myrank << "a mis a jour ses temperatures a jour" << temperatures[4][0] << ":" << temperatures[4][4] <<endl;
 
             MPI_Send(temperatures[4], 10, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
             printf ("Esclave n°%d : Envoi de ses temperatures au coordinateur !\n", myrank);
