@@ -21,7 +21,7 @@ using namespace std;
 
 int step = 0;
 
-void printGrid(float* table, int rows, int cols)
+void printGrid(float** table, int rows, int cols)
 {
 	int count = -1;
 	for (int i = 0; i < rows; i++)
@@ -55,7 +55,7 @@ string getColorByTemperature(float temp){
     return "#"+color;
 }
 
-void printSVG(float* table, int rows, int cols, float ambiantTemp)
+void printSVG(float** table, int rows, int cols, float ambiantTemp)
 {
 	int widthRectangle = 100;
 	int heightRectangle = 100;
@@ -106,8 +106,8 @@ int main( int argc, char *argv[] )
 {
 	int myrank;
 	float temperature;
-	float storeTemperature;
-	float* temperatures;
+	float* storeTemperature;
+	float** temperatures;
 	int rows = 2;
 	int cols = 2;
 	MPI_Comm parent;
@@ -128,8 +128,13 @@ int main( int argc, char *argv[] )
 		MPI_Recv(&cols, 1, MPI_INT, 0, 0, parent, &etat);
 		printf ("Coordinateur : Reception du nombre de colonnes %d !\n", cols);
 
+        //OLD
+		//temperatures =  new float[cols * rows];
 
-		temperatures =  new float[cols * rows];
+        for(int i =0;i< 9;i++) {
+            float temp[10] = {0,0,0,0,0,0,0,0,0,0};
+            temperatures[i] =  temp;
+        }
 
 		for (int i=1; i<10; i++)	{
 			for (int j=1; j<cols * rows + 1; j++)	{
@@ -141,7 +146,7 @@ int main( int argc, char *argv[] )
 			}
 
 			for (int k=1; k<cols * rows + 1; k++)	{
-				MPI_Recv(&storeTemperature, 1, MPI_FLOAT,k, 0, MPI_COMM_WORLD, &etat);
+				MPI_Recv(storeTemperature, 10, MPI_FLOAT,k, 0, MPI_COMM_WORLD, &etat);
 				//printf ("Coordinateur : Reception de l'esclave n°%d: %f°C \n", k, temperature);
 				temperatures[k-1] = storeTemperature;
 			}

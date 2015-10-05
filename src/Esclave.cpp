@@ -9,16 +9,16 @@ using namespace std;
 
 // Global
 int rows, cols;
+float* getDecreasedTemperature(float** temperaturesTab);
 
-float getAvgTemperature(float *temperatures, float temperatureCase)
+float getAvgTemperature(float *temperatures)
 {
 	int i = 0;
 	float totalTemperature = 0;
-	for (i = 0; i < 8; i++)
+	for (i = 0; i < 9; i++)
 	{
 		totalTemperature += temperatures[i];
 	}
-	totalTemperature += temperatureCase;
 
 	return (totalTemperature / 9);
 
@@ -124,21 +124,29 @@ int getIndexInTemperaturesTable(float index, int esclaveIndex){
     switch (indexRelatif){
         case -5:
             return 0;
+            break;
         case -4:
             return 1;
+            break;
         case -3:
             return 2;
+            break;
         case -1:
             return 3;
+            break;
         case 1:
             return 5;
+            break;
         case 3:
             return 6;
+            break;
         case 4:
             return 7;
+            break;
         case 5:
             return 8;
-        case default:
+            break;
+        default:
             return -1;
             break;
     }
@@ -168,11 +176,18 @@ int main( int argc, char *argv[] )
         printf ("Esclave n°%d : Reception de la grid de la part du maitre !\n", myrank);
         //grid = parseFloatsToGrid(gridChar);
 
+        //JALON 7 -- On remplis par défaut notre tableau de résultat avec des GRID de temperature ambiante
         for(int i =0;i< 9;i++) {
-            temperatures[i] = new float[10];
+            float temp[10] = {  ambientTemperature,ambientTemperature,ambientTemperature,
+                                ambientTemperature,ambientTemperature,ambientTemperature,
+                                ambientTemperature,ambientTemperature,ambientTemperature,ambientTemperature};
+            temperatures[i] =  temp;
         }
 
+        //On met dans le rang de l'esclave actuel au début de la liste des températures à envoyer
         gridFloat[0] = myrank;
+
+        //On met dans notre tableau de résultat les températures de notre esclave
         temperatures[4] = gridFloat;
 
         //printf ("Esclave n°%d : Reception de la temperature case (%f°C) de la part du maitre !\n", myrank, temperature);
@@ -220,34 +235,23 @@ int main( int argc, char *argv[] )
             	//printf("Message recu de esclave N°%d \n", tableauVoisinsTries[k]);
             	//temperaturesVoisins[k] = receivedTemp;
 
-            	int index = getIndexInTemperaturesTable(receivedTemp[0]);
+            	int index = getIndexInTemperaturesTable(receivedTemp[0],myrank);
             	if(index != -1) {
                     temperatures[index] = receivedTemp;
             	}
 
             }
 
-            //JALON 7 -- On complete non plus avec des temperatures simples, mais des GRID de temperature ambiante
-            for(int k = nbVoisins ; k < 8 ; k++){
-                float* ambiantTab = new float[9];
-                for(int l =0;l < 9;l++){
-                    ambiantTab = ambientTemperature;
-                }
-            	temperatures[k] = ambiantTab;
-            }
-
             //JALON 7 --
             //On crée un tableau de 9x9 contenant les 9 grids crées précédemment
             //La case de l'esclave central se retrouve au millieu de ce tableau
             //On parcours la grid 3x3 centrale, en utilisant les cases à coté pour calculer la moyenne de chaque case
+            temperatures[4] = getDecreasedTemperature(temperatures);
 
-            //Calculer la nouvelle temp
-            //JALON 7 -- On calcule la moyenne de la case globale, et on l'envoi au coordinateur
-            temperature = getAvgTemperature(temperaturesVoisins, temperature);
-            printf("L'esclave n°%d a mis a jour sa temperature : %f°C\n", myrank, temperature);
+            printf("L'esclave n°%d a mis a jour sa temperature \n", myrank);
 
-            MPI_Send(&temperature, 1, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
-            //printf ("Esclave n°%d : Envoi de la temperature ambiante (%f°C) au coordinateur !\n", myrank, ambientTemperature);
+            MPI_Send(temperatures[4], 10, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
+            printf ("Esclave n°%d : Envoi de ses temperatures (%f°C) au coordinateur !\n", myrank, ambientTemperature);
         }
 	}
 
@@ -255,4 +259,26 @@ int main( int argc, char *argv[] )
 
 	MPI_Finalize();
 	return 0;
+}
+
+
+float* getDecreasedTemperature(float** temperaturesTab) { //On envoi le tableau de 3*3 de l'esclave courant
+	float* returnTab;
+	int i, j;
+
+	#pragma omp parallel private (i,j) shared (temperaturesTab,returnTab)
+	{
+		#pragma omp for
+		for (i = 0; i < 9; i++){
+            //Pour chaque températures, on récupère une grille de ses voisins
+            float* tempAround = fonctionRemy(temperaturesTab,i);
+
+            //on fait la moyenne des temperatures
+            float avgTemp = getAvgTemperature(tempAround);
+
+            //On met à jour le tableau de retour avec la valeur calculée
+			returnTab[i] = avgTemp;
+		}
+	}
+	return returnTab;
 }
