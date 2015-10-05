@@ -123,8 +123,8 @@ int main( int argc, char *argv[] )
 {
 	int myrank;
 	float temperature;
-	float* storeTemperature;
-	float** temperatures;
+	float* storeTemperature = new float[10];
+	float** temperatures = new float*[9];
 	int rows = 2;
 	int cols = 2;
 	MPI_Comm parent;
@@ -149,9 +149,20 @@ int main( int argc, char *argv[] )
 		//temperatures =  new float[cols * rows];
 
         for(int i =0;i< 9;i++) {
-            float temp[10] = {0,0,0,0,0,0,0,0,0,0};
+            float* temp = new float[10];
+            temp[0] = 0;
+            temp[1] = 0;
+            temp[2] = 0;
+            temp[3] = 0;
+            temp[4] = 0;
+            temp[5] = 0;
+            temp[6] = 0;
+            temp[7] = 0;
+            temp[8] = 0;
+            temp[9] = 0;
             temperatures[i] =  temp;
         }
+
 
 		for (int i=1; i<10; i++)	{
 			for (int j=1; j<cols * rows + 1; j++)	{
@@ -160,16 +171,21 @@ int main( int argc, char *argv[] )
 
 				//printf ("Coordinateur : Envoi vers l'esclave n°%d de la temperature ambiante (%f°C).\n", j, temperature);
 				MPI_Send (&temperature, 1, MPI_FLOAT,j, 0, MPI_COMM_WORLD);
+
 			}
 
 			for (int k=1; k<cols * rows + 1; k++)	{
+
 				MPI_Recv(storeTemperature, 10, MPI_FLOAT,k, 0, MPI_COMM_WORLD, &etat);
+
 				//printf ("Coordinateur : Reception de l'esclave n°%d: %f°C \n", k, temperature);
 				temperatures[k-1] = storeTemperature;
+				cout << "Coordinateur 9" << endl;
 			}
 
 			//printGrid(temperatures,rows,cols);
 			printSVG(temperatures,rows,cols, temperature);
+			cout << "Coordinateur 10" << endl;
 		}
 
 		char response = 'K';

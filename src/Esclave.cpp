@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include "Cell.h"
 #include "Grid.h"
+#include <omp.h>
 
 using namespace std;
 
@@ -223,7 +224,7 @@ int main( int argc, char *argv[] )
 {
 	int myrank;
 	float ambientTemperature;
-	float** temperatures;
+	float** temperatures = new float*[9];
 	Grid grid;
 	float* gridFloat = new float[10];
 	MPI_Comm parent;
@@ -244,9 +245,17 @@ int main( int argc, char *argv[] )
 
         //JALON 7 -- On remplis par défaut notre tableau de résultat avec des GRID de temperature ambiante
         for(int i =0;i< 9;i++) {
-            float temp[10] = {  ambientTemperature,ambientTemperature,ambientTemperature,
-                                ambientTemperature,ambientTemperature,ambientTemperature,
-                                ambientTemperature,ambientTemperature,ambientTemperature,ambientTemperature};
+            float* temp = new float[10];
+            temp[0] = 20;
+            temp[1] = 20;
+            temp[2] = 20;
+            temp[3] = 20;
+            temp[4] = 20;
+            temp[5] = 20;
+            temp[6] = 20;
+            temp[7] = 20;
+            temp[8] = 20;
+            temp[9] = 20;
             temperatures[i] =  temp;
         }
 
@@ -256,7 +265,6 @@ int main( int argc, char *argv[] )
         //On met dans notre tableau de résultat les températures de notre esclave
         temperatures[4] = gridFloat;
 
-
         MPI_Recv(&rows, 1, MPI_INT, 0, 0, parent, &etat);
         printf ("Esclave n°%d : Reception du nombre de lignes %d !\n", myrank, rows);
 
@@ -265,13 +273,17 @@ int main( int argc, char *argv[] )
 
 		int *coords = getCoordinatesFromIndex(myrank);
 		//printf("Coordonnees esclave N°%d : %d;%d \n", myrank,coords[0],coords[1]);
+
 		int *voisins = getVoisins(coords);
 
         for(int i=1; i< 10; i++){
         	//printf ("Esclave n°%d : Attente reception temperature ambiante!\n", myrank);
+
+
         	MPI_Recv(&ambientTemperature, 1, MPI_FLOAT, 0, 0, MPI_COMM_WORLD, &etat);
             printf ("Esclave n°%d : Reception de la temperature ambiante (%f°C) de la part du coordinateur !\n", myrank, ambientTemperature);
-            grid.setAmbientTemperature(ambientTemperature);
+            //grid.setAmbientTemperature(ambientTemperature);
+
 
             //Envoyer en asynchrone à tous ces voisins
             int nbVoisins = getNbVoisins(voisins);
@@ -291,6 +303,7 @@ int main( int argc, char *argv[] )
             	}
             }
 
+
             //Attendre réception des températures voisins en synchrone
             //JALON 7 -- RECEPTION GRID DE TOUS NOS VOISINS
             float *temperaturesVoisins = new float[8];
@@ -300,7 +313,6 @@ int main( int argc, char *argv[] )
             	MPI_Recv(receivedTemp, 10, MPI_FLOAT, tableauVoisinsTries[k], 0, MPI_COMM_WORLD, &etat);
             	//printf("Message recu de esclave N°%d \n", tableauVoisinsTries[k]);
             	//temperaturesVoisins[k] = receivedTemp;
-
             	int index = getIndexInTemperaturesTable(receivedTemp[0],myrank);
             	if(index != -1) {
                     temperatures[index] = receivedTemp;
@@ -314,10 +326,10 @@ int main( int argc, char *argv[] )
             //On parcours la grid 3x3 centrale, en utilisant les cases à coté pour calculer la moyenne de chaque case
             temperatures[4] = getDecreasedTemperature(temperatures);
 
-            printf("L'esclave n°%d a mis a jour sa temperature \n", myrank);
+            cout << "L'esclave n°" << myrank << "a mis a jour ses temperatures a jour" << temperatures[4][0] << ":" << temperatures[4][4] <<endl;
 
             MPI_Send(temperatures[4], 10, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
-            printf ("Esclave n°%d : Envoi de ses temperatures (%f°C) au coordinateur !\n", myrank, ambientTemperature);
+            printf ("Esclave n°%d : Envoi de ses temperatures au coordinateur !\n", myrank);
         }
 	}
 
@@ -329,13 +341,15 @@ int main( int argc, char *argv[] )
 
 
 float* getDecreasedTemperature(float** temperaturesTab) { //On envoi le tableau de 3*3 de l'esclave courant
-	float* returnTab;
+	float* returnTab = new float[9];
 	int i, j;
+
 
 	#pragma omp parallel private (i,j) shared (temperaturesTab,returnTab)
 	{
 		#pragma omp for
 		for (i = 0; i < 9; i++){
+
             //Pour chaque températures, on récupère une grille de ses voisins
             float* tempAround = getRelativeToCellTempGrid(i,temperaturesTab);
 
@@ -344,6 +358,7 @@ float* getDecreasedTemperature(float** temperaturesTab) { //On envoi le tableau 
 
             //On met à jour le tableau de retour avec la valeur calculée
 			returnTab[i] = avgTemp;
+
 		}
 	}
 	return returnTab;
