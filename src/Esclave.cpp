@@ -1,5 +1,11 @@
 #include <mpi.h>
 #include <stdio.h>
+#include <iostream>
+#include <cstdlib>
+#include "Cell.h"
+#include "Grid.h"
+
+using namespace std;
 
 // Global
 int rows, cols;
@@ -89,12 +95,60 @@ int getNbVoisins(int *voisins){
     return nbVoisins;
 }
 
+void printGrid(Grid grid)
+{
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < cols; j++)
+		{
+			float value = grid.getCell(i, j).getTemperature();
+			cout << value << "  ";
+		}
+		cout << endl;
+	}
+}
 
+
+
+Grid parseCharToGrid(char* gridChar){
+    string s = string(gridChar);
+    string delimiter = "|";
+    size_t pos = 0;
+    int i = 0, j = 0, k = 0;
+    string temp;
+    Grid grid;
+    float temperatures[9];
+
+    grid.setRows(3);
+	grid.setCols(3);
+	grid.allocateGridTab();
+
+    while ((pos = s.find(delimiter)) != string::npos) {
+        temp = s.substr(0, pos);
+        temperatures[k] = atof(temp.c_str());
+        s.erase(0, pos + delimiter.length());
+        k++;
+    }
+
+    k=0;
+	for (i = 0; i<3; i++)
+	{
+		for (j = 0; j<3; j++)
+		{
+            grid.getCell(i, j).setTemperature(temperatures[k]);
+            k++;
+		}
+	}
+
+	return grid;
+}
 
 int main( int argc, char *argv[] )
 {
 	int myrank;
 	float temperature, ambientTemperature;
+	Grid grid;
+	char* gridChar = new char[128];
 	MPI_Comm parent;
 	MPI_Status etat;
 	MPI_Init (&argc, &argv);
@@ -105,10 +159,11 @@ int main( int argc, char *argv[] )
 	if (parent == MPI_COMM_NULL) {
 		printf ("Esclave %d : Pas de pere !\n", myrank);
 	} else {
-
         //JALON 7
         //Reception de la grid 3x3 du thread maitre (MPI)
-        //... A FAIRE
+        MPI_Recv(&gridChar, 128, MPI_CHAR, 0, 0, parent, &etat);
+        printf ("Esclave n°%d : Reception de la grid de la part du maitre !\n", myrank);
+        grid = parseCharToGrid(gridChar);
 
 		MPI_Recv(&temperature, 1, MPI_FLOAT, 0, 0, parent, &etat);
         //printf ("Esclave n°%d : Reception de la temperature case (%f°C) de la part du maitre !\n", myrank, temperature);
@@ -126,7 +181,8 @@ int main( int argc, char *argv[] )
         for(int i=1; i< 10; i++){
         	//printf ("Esclave n°%d : Attente reception temperature ambiante!\n", myrank);
         	MPI_Recv(&ambientTemperature, 1, MPI_FLOAT, 0, 0, MPI_COMM_WORLD, &etat);
-            //printf ("Esclave n°%d : Reception de la temperature ambiante (%f°C) de la part du coordinateur !\n", myrank, ambientTemperature);
+            printf ("Esclave n°%d : Reception de la temperature ambiante (%f°C) de la part du coordinateur !\n", myrank, ambientTemperature);
+            grid.setAmbientTemperature(ambientTemperature);
 
             //Envoyer en asynchrone à tous ces voisins
             int nbVoisins = getNbVoisins(voisins);

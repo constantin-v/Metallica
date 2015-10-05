@@ -79,7 +79,7 @@ Récupère la température de la case dindex indexCase et celles de ses vo
 **/
 float* Grid::getLotTemperatures(int x, int y)
 {
-	float lotTemperatures[9]; //initialise with the good length
+	float* lotTemperatures = new float[9];
 	int i = 0, j, k;
 	for (j = x - 1; j <= (x + 1); j++)
 	{
