@@ -97,27 +97,14 @@ int getNbVoisins(int *voisins){
 
 
 
-Grid parseCharToGrid(char* gridChar){
-    string s = string(gridChar);
-    string delimiter = "|";
-    size_t pos = 0;
+Grid parseFloatsToGrid(float* temperatures){
     int i = 0, j = 0, k = 0;
-    string temp;
     Grid grid;
-    float temperatures[9];
 
     grid.setRows(3);
 	grid.setCols(3);
 	grid.allocateGridTab();
 
-    while ((pos = s.find(delimiter)) != string::npos) {
-        temp = s.substr(0, pos);
-        temperatures[k] = atof(temp.c_str());
-        s.erase(0, pos + delimiter.length());
-        k++;
-    }
-
-    k=0;
 	for (i = 0; i<3; i++)
 	{
 		for (j = 0; j<3; j++)
@@ -149,13 +136,12 @@ int main( int argc, char *argv[] )
         //JALON 7
         //Reception de la grid 3x3 du thread maitre (MPI)
         MPI_Recv(gridChar, 9, MPI_FLOAT, 0, 0, parent, &etat);
-        //cout << gridChar[0] << ":" <<gridChar[1] << ":" <<gridChar[2] << ":" <<gridChar[3] << ":"  << endl;
-        cout << gridChar[0] << ":" << gridChar[4] << endl;
-
-        //grid = parseCharToGrid(gridChar);
         printf ("Esclave n°%d : Reception de la grid de la part du maitre !\n", myrank);
+        grid = parseFloatsToGrid(gridChar);
+        //cout << grid.toStringPipe() << endl;
 
-	//	MPI_Recv(&temperature, 1, MPI_INT, 0, 0, parent, &etat);
+
+        //	MPI_Recv(&temperature, 1, MPI_INT, 0, 0, parent, &etat);
         //printf ("Esclave n°%d : Reception de la temperature case (%f°C) de la part du maitre !\n", myrank, temperature);
 
         MPI_Recv(&rows, 1, MPI_INT, 0, 0, parent, &etat);
