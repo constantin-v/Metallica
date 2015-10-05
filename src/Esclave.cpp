@@ -186,17 +186,17 @@ float* mergeTemperaturesGrid(float** neighboursTemps){
 }
 
 /* Index sur un tableau relatif de 25*25 (3*3 de la case concernée plus une bordure d'une case) */
-float* getRelativeToCellTempGrid(int index){
+float* getRelativeToCellTempGrid(int index,float** neighboursTemps){
     float* mergedTemperatures = mergeTemperaturesGrid(neighboursTemps);
     float* relativeGrid = new float[9];
 
     int relativeIndex;
     if(index < 3){
-        relativeIndex = index + 7
+        relativeIndex = index + 7;
     } else if (index < 6) {
-        relativeIndex = index + 9
+        relativeIndex = index + 9;
     } else {
-        relativeIndex = index + 11
+        relativeIndex = index + 11;
     }
 
     int i = 0;
@@ -256,12 +256,12 @@ int main( int argc, char *argv[] )
         //On met dans notre tableau de résultat les températures de notre esclave
         temperatures[4] = gridFloat;
 
-        //printf ("Esclave n°%d : Reception de la temperature case (%f°C) de la part du maitre !\n", myrank, temperature);
+
         MPI_Recv(&rows, 1, MPI_INT, 0, 0, parent, &etat);
-		//printf ("Esclave n°%d : Reception du nombre de lignes %d !\n", myrank, rows);
+        printf ("Esclave n°%d : Reception du nombre de lignes %d !\n", myrank, rows);
 
 		MPI_Recv(&cols, 1, MPI_INT, 0, 0, parent, &etat);
-		//printf ("Esclave n°%d : Reception du nombre de colonnes %d !\n", myrank, cols);
+		printf ("Esclave n°%d : Reception du nombre de colonnes %d !\n", myrank, cols);
 
 		int *coords = getCoordinatesFromIndex(myrank);
 		//printf("Coordonnees esclave N°%d : %d;%d \n", myrank,coords[0],coords[1]);
@@ -337,7 +337,7 @@ float* getDecreasedTemperature(float** temperaturesTab) { //On envoi le tableau 
 		#pragma omp for
 		for (i = 0; i < 9; i++){
             //Pour chaque températures, on récupère une grille de ses voisins
-            float* tempAround = fonctionRemy(temperaturesTab,i);
+            float* tempAround = getRelativeToCellTempGrid(i,temperaturesTab);
 
             //on fait la moyenne des temperatures
             float avgTemp = getAvgTemperature(tempAround);

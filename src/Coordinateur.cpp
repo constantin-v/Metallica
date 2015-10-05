@@ -21,7 +21,7 @@ using namespace std;
 
 int step = 0;
 
-void printGrid(float** table, int rows, int cols)
+void printGrid(float* table, int rows, int cols)
 {
 	int count = -1;
 	for (int i = 0; i < rows; i++)
@@ -57,49 +57,66 @@ string getColorByTemperature(float temp){
 
 void printSVG(float** table, int rows, int cols, float ambiantTemp)
 {
-	int widthRectangle = 100;
-	int heightRectangle = 100;
-	int widthTotal = cols * widthRectangle;
-	int heightTotal = rows * heightRectangle;
+    int widthRectangle = 300;
+    int heightRectangle = 300;
+    int widthTotal = cols * widthRectangle;
+    int heightTotal = rows * heightRectangle;
 
-	std::string name = "Metallica" + std::to_string(step) + ".html";
-	cout << name << endl;
-	std::ofstream outfile;
-	outfile.open (name.c_str());
-	outfile << "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?>";
-	outfile << "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" ";
-	outfile << "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">";
-	outfile << "<html xmlns=\"http://www.w3.org/1999/xhtml\"> ";
-	outfile << "<head>";
-	outfile << "<title>Refroidissement d'une plaque de métal</title>";
-	outfile << "</head>";
-	outfile << "<body>";
-	outfile << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\"";
-	outfile << "width=\"" << widthTotal + 100 << "px\" height=\""<< heightTotal +100 <<"px\">" << std::endl;
+    int widthSubRectangle = 100;
+    int heightSubRectangle = 100;
+
+    std::string name = "Metallica" + std::to_string(step) + ".html";
+    cout << name << endl;
+    std::ofstream outfile;
+    outfile.open (name.c_str());
+    outfile << "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?>";
+    outfile << "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" ";
+    outfile << "\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">";
+    outfile << "<html xmlns=\"http://www.w3.org/1999/xhtml\"> ";
+    outfile << "<head>";
+    outfile << "<title>Refroidissement d'une plaque de métal</title>";
+    outfile << "</head>";
+    outfile << "<body>";
+    outfile << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\"";
+    outfile << "width=\"" << widthTotal + 100 << "px\" height=\""<< heightTotal +100 <<"px\">" << std::endl;
 
     //root rectangle for ambiant temp
     outfile << "<rect width=\""<< widthTotal + 100 <<"\" height=\""<< heightTotal + 100 <<"\" fill=\"" << getColorByTemperature(ambiantTemp) << "\" stroke=\"black\"/>" << std::endl;
     outfile << "<text x=\""<< 25 <<"\" y=\""<< heightTotal + 25 <<"\" width=\""<< widthRectangle <<"\" height=\""<< heightRectangle <<"\" fill=\"#333333\"> Ambiant Temperature : " << ambiantTemp <<"</text>"<< std::endl;
 
-	int count = -1;
-	for (int i = 0; i < rows; i++)
-	{
-		for (int j = 0; j < cols; j++)
-		{
-			count++;
-			float value = table[count];
-			int ypos = i * widthRectangle; //i creer les lignes donc la position y
-			int xpos = j * heightRectangle; // j creer les colonnes donc le x
-			outfile << "<rect x=\""<< xpos <<"\" y=\""<< ypos <<"\" width=\""<< widthRectangle <<"\" height=\""<< heightRectangle <<"\" fill=\"" << getColorByTemperature(value) << "\" stroke=\"black\"/>" << std::endl;
-            outfile << "<text x=\""<< xpos + 25 <<"\" y=\""<< ypos + 25 <<"\" width=\""<< widthRectangle <<"\" height=\""<< heightRectangle <<"\" fill=\"#333333\">" << value <<"</text>"<< std::endl;
+    //creation de la plaque maitre
+    int count = -1;
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            //creation des plaques filles
+            count++;
+            float* subtable = table[count];
+            int ypos = i * widthRectangle; //i creer les lignes donc la position y
+            int xpos = j * heightRectangle; // j creer les colonnes donc le x
+            outfile << "<rect x=\""<< xpos <<"\" y=\""<< ypos <<"\" width=\""<< widthRectangle <<"\" height=\""<< heightRectangle <<"\" stroke=\"black\"/>" << std::endl;
 
-		}
-		printf("\n");
-	}
+            int subcount = -1;
+            for (int k = 0; k < 3; k++)
+            {
+                for (int l = 0; l < 3; l++)
+                {
+                    float value = subtable[subcount];
+                    int ypos = k * widthSubRectangle; //i creer les lignes donc la position y
+                    int xpos = l * heightSubRectangle; // j creer les colonnes donc le x
+                    outfile << "<rect x=\""<< xpos <<"\" y=\""<< ypos <<"\" width=\""<< widthSubRectangle <<"\" height=\""<< heightSubRectangle <<"\" fill=\"" << getColorByTemperature(value) << "\" stroke=\"black\"/>" << std::endl;
+                    outfile << "<text x=\""<< xpos + 25 <<"\" y=\""<< ypos + 25 <<"\" width=\""<< widthSubRectangle <<"\" height=\""<< heightSubRectangle <<"\" fill=\"#333333\">" << value <<"</text>"<< std::endl;
 
-	outfile <<   "</svg> </body></html>" << std::endl;
-	outfile.close();
-	step++;
+                }
+            }
+        }
+        printf("\n");
+    }
+
+    outfile <<   "</svg> </body></html>" << std::endl;
+    outfile.close();
+    step++;
 }
 
 int main( int argc, char *argv[] )
@@ -151,7 +168,7 @@ int main( int argc, char *argv[] )
 				temperatures[k-1] = storeTemperature;
 			}
 
-			printGrid(temperatures,rows,cols);
+			//printGrid(temperatures,rows,cols);
 			printSVG(temperatures,rows,cols, temperature);
 		}
 

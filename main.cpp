@@ -20,10 +20,10 @@ Grid decreaseTemperature(Grid grid);
 
 int main(int argc, char *argv[])
 {
-    initialiseTemperatures();
+    //initialiseTemperatures();
 
-	printGrid(startingTemperatures);
-	cout << endl;
+	//printGrid(startingTemperatures);
+	//cout << endl;
 
 	printf("Pere : Je suis VIVAAAAAAAANT.\n");
 	int i, compteur, errCodes[cols * rows];
