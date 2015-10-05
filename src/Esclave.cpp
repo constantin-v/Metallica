@@ -327,23 +327,11 @@ int main( int argc, char *argv[] )
             //La case de l'esclave central se retrouve au millieu de ce tableau
             //On parcours la grid 3x3 centrale, en utilisant les cases à coté pour calculer la moyenne de chaque case
 
-            /*cout << "Temperature esclave n°" << myrank << ".Index:" << temperatures[0][0] << "."
-                                                                    << temperatures[0][1] << "/"
-                                                                    << temperatures[0][2] << "/"
-                                                                    << temperatures[0][3] << "/"
-                                                                    << temperatures[0][4] << "/"
-                                                                    << temperatures[0][5] << "/"
-                                                                    << temperatures[0][6] << "/"
-                                                                    << temperatures[0][7] << "/"
-                                                                    << temperatures[0][8] << "/"
-                                                                    << temperatures[0][9] << "/"
-                                                                    << temperatures[0][10] <<endl;*/
-
 
             temperatures[4] = getDecreasedTemperature(temperatures);
 
 
-            MPI_Send(temperatures[4], 10, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
+            MPI_Send(temperatures[4], 9, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
             printf ("Esclave n°%d : Envoi de ses temperatures au coordinateur !\n", myrank);
         }
 	}

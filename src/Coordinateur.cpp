@@ -105,14 +105,13 @@ void printSVG(float** table, int rows, int cols, float ambiantTemp)
             outfile << "<rect x=\""<< xpos <<"\" y=\""<< ypos <<"\" width=\""<< widthRectangle <<"\" height=\""<< heightRectangle <<"\" stroke=\"black\"/>" << std::endl;
 
             //On creer les mini-plaques (toujours 3x3)
-            //Cependant il y a 1 cases supplémentaire (le [0] a eviter) car utiliser par les processus esclaves
             int subcount = -1;
             for (int k = 0; k < 3; k++)
             {
                 for (int l = 0; l < 3; l++)
                 {
                     subcount++;
-                    float value = subtable[subcount+1]; //on evite le 0
+                    float value = subtable[subcount];
                     int ypos2 = ypos + (k * widthSubRectangle); //i creer les lignes donc la position y
                     int xpos2 = xpos + (l * heightSubRectangle); // j creer les colonnes donc le x
                     outfile << "<rect x=\""<< xpos2 <<"\" y=\""<< ypos2 <<"\" width=\""<< widthSubRectangle <<"\" height=\""<< heightSubRectangle <<"\" fill=\"" << getColorByTemperature(value) << "\" stroke=\"black\"/>" << std::endl;
@@ -133,7 +132,7 @@ int main( int argc, char *argv[] )
 {
 	int myrank;
 	float temperature;
-	float* storeTemperature = new float[10];
+	float* storeTemperature = new float[9];
 	float** temperatures = new float*[9];
 	int rows = 2;
 	int cols = 2;
@@ -186,13 +185,13 @@ int main( int argc, char *argv[] )
 
 			for (int k=1; k<cols * rows + 1; k++)	{
 
-				MPI_Recv(storeTemperature, 10, MPI_FLOAT,k, 0, MPI_COMM_WORLD, &etat);
+				MPI_Recv(storeTemperature, 9, MPI_FLOAT,k, 0, MPI_COMM_WORLD, &etat);
 
 				//printf ("Coordinateur : Reception de l'esclave n°%d: %f°C \n", k, temperature);
 				temperatures[k-1] = storeTemperature;
 				cout << "Coordinateur 9" << endl;
 			}
-            cout << "Temperature esclave n°" << myrank << ".Index:" << temperatures[0][0] << "."
+            /*cout << "TemperatureE esclave n°" << myrank << ".Index:" << temperatures[0][0] << "."
                                                                     << temperatures[0][1] << "/"
                                                                     << temperatures[0][2] << "/"
                                                                     << temperatures[0][3] << "/"
@@ -201,7 +200,7 @@ int main( int argc, char *argv[] )
                                                                     << temperatures[0][6] << "/"
                                                                     << temperatures[0][7] << "/"
                                                                     << temperatures[0][8] << "/"
-                                                                    << temperatures[0][9] << endl;
+                                                                    << temperatures[0][9] << endl;*/
 
 			//printGrid(temperatures,rows,cols);
 			printSVG(temperatures,rows,cols, temperature);
