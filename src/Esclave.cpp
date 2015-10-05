@@ -117,12 +117,41 @@ Grid parseFloatsToGrid(float* temperatures){
 	return grid;
 }
 
+int getIndexInTemperaturesTable(float index, int esclaveIndex){
+
+    int indexRelatif = index - esclaveIndex;
+
+    switch (indexRelatif){
+        case -5:
+            return 0;
+        case -4:
+            return 1;
+        case -3:
+            return 2;
+        case -1:
+            return 3;
+        case 1:
+            return 5;
+        case 3:
+            return 6;
+        case 4:
+            return 7;
+        case 5:
+            return 8;
+        case default:
+            return -1;
+            break;
+    }
+    return -1;
+}
+
 int main( int argc, char *argv[] )
 {
 	int myrank;
-	float temperature, ambientTemperature;
+	float ambientTemperature;
+	float** temperatures;
 	Grid grid;
-	float* gridChar = new float[9];
+	float* gridFloat = new float[10];
 	MPI_Comm parent;
 	MPI_Status etat;
 	MPI_Init (&argc, &argv);
@@ -135,15 +164,18 @@ int main( int argc, char *argv[] )
 	} else {
         //JALON 7
         //Reception de la grid 3x3 du thread maitre (MPI)
-        MPI_Recv(gridChar, 9, MPI_FLOAT, 0, 0, parent, &etat);
+        MPI_Recv(gridFloat, 10, MPI_FLOAT, 0, 0, parent, &etat);
         printf ("Esclave n°%d : Reception de la grid de la part du maitre !\n", myrank);
-        grid = parseFloatsToGrid(gridChar);
-        //cout << grid.toStringPipe() << endl;
+        //grid = parseFloatsToGrid(gridChar);
 
+        for(int i =0;i< 9;i++) {
+            temperatures[i] = new float[10];
+        }
 
-        //	MPI_Recv(&temperature, 1, MPI_INT, 0, 0, parent, &etat);
+        gridFloat[0] = myrank;
+        temperatures[4] = gridFloat;
+
         //printf ("Esclave n°%d : Reception de la temperature case (%f°C) de la part du maitre !\n", myrank, temperature);
-
         MPI_Recv(&rows, 1, MPI_INT, 0, 0, parent, &etat);
 		//printf ("Esclave n°%d : Reception du nombre de lignes %d !\n", myrank, rows);
 
@@ -170,7 +202,8 @@ int main( int argc, char *argv[] )
             //printf("Nombre de voisins de l'esclave n°%d : %d \n", myrank, nbVoisins);
             for(int rankVoisin = 0 ; rankVoisin < 9 ; rankVoisin++){
             	if(voisins[rankVoisin] != 0){
-            		MPI_Isend(&temperature, 1, MPI_FLOAT, voisins[rankVoisin], 0, MPI_COMM_WORLD, &requestNull);
+            		//MPI_Isend(&temperature, 1, MPI_FLOAT, voisins[rankVoisin], 0, MPI_COMM_WORLD, &requestNull);
+            		MPI_Isend(gridFloat, 10, MPI_FLOAT, voisins[rankVoisin], 0, MPI_COMM_WORLD, &requestNull);
             		tableauVoisinsTries[compteur] = voisins[rankVoisin];
             		compteur++;
             		//printf("Message de esclave N°%d vers esclave %d \n",myrank, voisins[rankVoisin] );
@@ -181,16 +214,26 @@ int main( int argc, char *argv[] )
             //JALON 7 -- RECEPTION GRID DE TOUS NOS VOISINS
             float *temperaturesVoisins = new float[8];
             for(int k = 0 ; k < nbVoisins ; k++){
-            	float receivedTemp;
+            	float* receivedTemp = new float[10];
             	//printf("Message a recevoir de esclave N°%d \n", tableauVoisinsTries[k]);
-            	MPI_Recv(&receivedTemp, 1, MPI_FLOAT, tableauVoisinsTries[k], 0, MPI_COMM_WORLD, &etat);
+            	MPI_Recv(receivedTemp, 10, MPI_FLOAT, tableauVoisinsTries[k], 0, MPI_COMM_WORLD, &etat);
             	//printf("Message recu de esclave N°%d \n", tableauVoisinsTries[k]);
-            	temperaturesVoisins[k] = receivedTemp;
+            	//temperaturesVoisins[k] = receivedTemp;
+
+            	int index = getIndexInTemperaturesTable(receivedTemp[0]);
+            	if(index != -1) {
+                    temperatures[index] = receivedTemp;
+            	}
+
             }
 
             //JALON 7 -- On complete non plus avec des temperatures simples, mais des GRID de temperature ambiante
             for(int k = nbVoisins ; k < 8 ; k++){
-            	temperaturesVoisins[k] = ambientTemperature;
+                float* ambiantTab = new float[9];
+                for(int l =0;l < 9;l++){
+                    ambiantTab = ambientTemperature;
+                }
+            	temperatures[k] = ambiantTab;
             }
 
             //JALON 7 --
