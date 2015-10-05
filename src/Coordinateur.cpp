@@ -57,13 +57,18 @@ string getColorByTemperature(float temp){
 
 void printSVG(float** table, int rows, int cols, float ambiantTemp)
 {
-    int widthRectangle = 300;
-    int heightRectangle = 300;
+    //taille des rectangle des mini-plaque
+    int widthSubRectangle = 100;
+    int heightSubRectangle = 100;
+
+    //taille des rectangles globaux
+    int widthRectangle = 320; //20px pour la marge
+    int heightRectangle = 320;
+
+    //taille total SVG
     int widthTotal = cols * widthRectangle;
     int heightTotal = rows * heightRectangle;
 
-    int widthSubRectangle = 100;
-    int heightSubRectangle = 100;
 
     std::string name = "Metallica" + std::to_string(step) + ".html";
     cout << name << endl;
@@ -95,18 +100,23 @@ void printSVG(float** table, int rows, int cols, float ambiantTemp)
             float* subtable = table[count];
             int ypos = i * widthRectangle; //i creer les lignes donc la position y
             int xpos = j * heightRectangle; // j creer les colonnes donc le x
+
+            //on creer le rectangle qui contiendra les petites plaques
             outfile << "<rect x=\""<< xpos <<"\" y=\""<< ypos <<"\" width=\""<< widthRectangle <<"\" height=\""<< heightRectangle <<"\" stroke=\"black\"/>" << std::endl;
 
+            //On creer les mini-plaques (toujours 3x3)
+            //Cependant il y a 1 cases supplémentaire (le [0] a eviter) car utiliser par les processus esclaves
             int subcount = -1;
             for (int k = 0; k < 3; k++)
             {
                 for (int l = 0; l < 3; l++)
                 {
-                    float value = subtable[subcount];
-                    int ypos = k * widthSubRectangle; //i creer les lignes donc la position y
-                    int xpos = l * heightSubRectangle; // j creer les colonnes donc le x
-                    outfile << "<rect x=\""<< xpos <<"\" y=\""<< ypos <<"\" width=\""<< widthSubRectangle <<"\" height=\""<< heightSubRectangle <<"\" fill=\"" << getColorByTemperature(value) << "\" stroke=\"black\"/>" << std::endl;
-                    outfile << "<text x=\""<< xpos + 25 <<"\" y=\""<< ypos + 25 <<"\" width=\""<< widthSubRectangle <<"\" height=\""<< heightSubRectangle <<"\" fill=\"#333333\">" << value <<"</text>"<< std::endl;
+                    subcount++;
+                    float value = subtable[subcount+1]; //on evite le 0
+                    int ypos2 = ypos + (k * widthSubRectangle); //i creer les lignes donc la position y
+                    int xpos2 = xpos + (l * heightSubRectangle); // j creer les colonnes donc le x
+                    outfile << "<rect x=\""<< xpos2 <<"\" y=\""<< ypos2 <<"\" width=\""<< widthSubRectangle <<"\" height=\""<< heightSubRectangle <<"\" fill=\"" << getColorByTemperature(value) << "\" stroke=\"black\"/>" << std::endl;
+                    outfile << "<text x=\""<< xpos2 + 25 <<"\" y=\""<< ypos2 + 25 <<"\" width=\""<< widthSubRectangle <<"\" height=\""<< heightSubRectangle <<"\" fill=\"#333333\">" << value <<"</text>"<< std::endl;
 
                 }
             }
