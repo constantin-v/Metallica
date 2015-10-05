@@ -145,6 +145,72 @@ int getIndexInTemperaturesTable(float index, int esclaveIndex){
     return -1;
 }
 
+float* mergeTemperaturesGrid(float** neighboursTemps){
+    float* temperaturesGrid = new float[25];
+    int index = 7;
+
+    for(int i = 1 ; i < 10 ; i++){
+        temperaturesGrid[index] = neighboursTemps[4][i];
+        index++;
+        if(index%5 == 0){
+            index=index+2;
+        }
+    }
+
+    temperaturesGrid[1] = neighboursTemps[0][9];
+    temperaturesGrid[2] = neighboursTemps[1][7];
+    temperaturesGrid[3] = neighboursTemps[1][8];
+    temperaturesGrid[4] = neighboursTemps[1][9];
+    temperaturesGrid[5] = neighboursTemps[2][7];
+    temperaturesGrid[6] = neighboursTemps[3][3];
+    temperaturesGrid[10] = neighboursTemps[5][1];
+    temperaturesGrid[11] = neighboursTemps[3][6];
+    temperaturesGrid[13] = neighboursTemps[5][4];
+    temperaturesGrid[16] = neighboursTemps[3][9];
+    temperaturesGrid[20] = neighboursTemps[5][7];
+    temperaturesGrid[21] = neighboursTemps[6][3];
+    temperaturesGrid[22] = neighboursTemps[7][1];
+    temperaturesGrid[23] = neighboursTemps[7][2];
+    temperaturesGrid[24] = neighboursTemps[7][3];
+    temperaturesGrid[25] = neighboursTemps[8][1];
+
+    return temperaturesGrid;
+}
+
+/* Index sur un tableau relatif de 25*25 (3*3 de la case concernée plus une bordure d'une case) */
+float* getRelativeToCellTempGrid(int index){
+    float* mergedTemperatures = mergeTemperaturesGrid(neighboursTemps);
+    float* relativeGrid = new float[9];
+
+    int relativeIndex;
+    if(index < 3){
+        relativeIndex = index + 7
+    } else if (index < 6) {
+        relativeIndex = index + 9
+    } else {
+        relativeIndex = index + 11
+    }
+
+    int i = 0;
+    for(int j = (relativeIndex-6); j < (relativeIndex-3) ; j++){
+        relativeGrid[i] = mergedTemperatures[j];
+        i++;
+    }
+
+    for(int j = (relativeIndex-1); j < (relativeIndex+2) ; j++){
+        relativeGrid[i] = mergedTemperatures[j];
+        i++;
+    }
+
+    for(int j = (relativeIndex+4); j < (relativeIndex+7) ; j++){
+        relativeGrid[i] = mergedTemperatures[j];
+        i++;
+    }
+
+    return relativeGrid;
+}
+
+
 int main( int argc, char *argv[] )
 {
 	int myrank;
