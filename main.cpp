@@ -77,6 +77,11 @@ int main(int argc, char *argv[])
 
 	float temperatureToSend;
 	for (i=1; i< rows * cols + 1; i++)	{
+        //JALON 7
+        //On crée un Grid 3x3 contenant les 9 témperatures de la case maître
+        //On envoi cette grid à chaque esclave
+
+        //JALON 5
         temperatureToSend = startingTemperatures.getCell(i-1).getTemperature();
         //printf ("Pere : Envoi vers l'esclave n°%d de sa temperature case (%f°C).\n", i, temperatureToSend);
 		MPI_Send (&temperatureToSend, 1, MPI_FLOAT, i, 0, intercomm);

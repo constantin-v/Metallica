@@ -32,7 +32,7 @@ int getIndexFromCoordinates(int x, int y){
 	return -1;
 }
 
-int* getCoordinatesFromIndex(int index){	
+int* getCoordinatesFromIndex(int index){
 	int* coordinates = new int[2];
 	int count = 0;
 
@@ -67,10 +67,10 @@ int* getVoisins(int *coords)
 	{
 		for (k = coords[1] - 1; k <= (coords[1] + 1); k++)
 		{
-			if(areCoordinatesCorrect(j, k) && !(j == coords[0] && k == coords[1])) {				
-				lotVoisins[i] = getIndexFromCoordinates(j, k);								
+			if(areCoordinatesCorrect(j, k) && !(j == coords[0] && k == coords[1])) {
+				lotVoisins[i] = getIndexFromCoordinates(j, k);
 			} else {
-				lotVoisins[i] = 0;				
+				lotVoisins[i] = 0;
 			}
 			i++;
 		}
@@ -106,6 +106,10 @@ int main( int argc, char *argv[] )
 		printf ("Esclave %d : Pas de pere !\n", myrank);
 	} else {
 
+        //JALON 7
+        //Reception de la grid 3x3 du thread maitre (MPI)
+        //... A FAIRE
+
 		MPI_Recv(&temperature, 1, MPI_FLOAT, 0, 0, parent, &etat);
         //printf ("Esclave n°%d : Reception de la temperature case (%f°C) de la part du maitre !\n", myrank, temperature);
 
@@ -114,8 +118,8 @@ int main( int argc, char *argv[] )
 
 		MPI_Recv(&cols, 1, MPI_INT, 0, 0, parent, &etat);
 		//printf ("Esclave n°%d : Reception du nombre de colonnes %d !\n", myrank, cols);
-		
-		int *coords = getCoordinatesFromIndex(myrank);		
+
+		int *coords = getCoordinatesFromIndex(myrank);
 		//printf("Coordonnees esclave N°%d : %d;%d \n", myrank,coords[0],coords[1]);
 		int *voisins = getVoisins(coords);
 
@@ -129,6 +133,8 @@ int main( int argc, char *argv[] )
             int *tableauVoisinsTries = new int[8];
             int compteur = 0;
 
+            //On envoi notre temprature à tous nos voisins
+            //JALON 7 -- ENVOI GRID 3x3 A TOUS NOS VOISINS
             //printf("Nombre de voisins de l'esclave n°%d : %d \n", myrank, nbVoisins);
             for(int rankVoisin = 0 ; rankVoisin < 9 ; rankVoisin++){
             	if(voisins[rankVoisin] != 0){
@@ -140,6 +146,7 @@ int main( int argc, char *argv[] )
             }
 
             //Attendre réception des températures voisins en synchrone
+            //JALON 7 -- RECEPTION GRID DE TOUS NOS VOISINS
             float *temperaturesVoisins = new float[8];
             for(int k = 0 ; k < nbVoisins ; k++){
             	float receivedTemp;
@@ -149,11 +156,18 @@ int main( int argc, char *argv[] )
             	temperaturesVoisins[k] = receivedTemp;
             }
 
+            //JALON 7 -- On complete non plus avec des temperatures simples, mais des GRID de temperature ambiante
             for(int k = nbVoisins ; k < 8 ; k++){
             	temperaturesVoisins[k] = ambientTemperature;
             }
 
+            //JALON 7 --
+            //On crée un tableau de 9x9 contenant les 9 grids crées précédemment
+            //La case de l'esclave central se retrouve au millieu de ce tableau
+            //On parcours la grid 3x3 centrale, en utilisant les cases à coté pour calculer la moyenne de chaque case
+
             //Calculer la nouvelle temp
+            //JALON 7 -- On calcule la moyenne de la case globale, et on l'envoi au coordinateur
             temperature = getAvgTemperature(temperaturesVoisins, temperature);
             printf("L'esclave n°%d a mis a jour sa temperature : %f°C\n", myrank, temperature);
 
