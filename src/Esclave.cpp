@@ -149,8 +149,10 @@ int main( int argc, char *argv[] )
         //JALON 7
         //Reception de la grid 3x3 du thread maitre (MPI)
         MPI_Recv(&gridChar, 128, MPI_CHAR, 0, 0, parent, &etat);
-        printf ("Esclave n°%d : Reception de la grid de la part du maitre !\n", myrank);
         grid = parseCharToGrid(gridChar);
+        printf ("Esclave n°%d : Reception de la grid de la part du maitre !\n", myrank);
+
+        cout << grid.toStringPipe() << endl;
 
 		MPI_Recv(&temperature, 1, MPI_FLOAT, 0, 0, parent, &etat);
         //printf ("Esclave n°%d : Reception de la temperature case (%f°C) de la part du maitre !\n", myrank, temperature);
