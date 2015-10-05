@@ -1,6 +1,6 @@
-#include "Grid.h"
 #include <string>
 #include <sstream>
+#include "Grid.h"
 
 namespace std
 {
@@ -12,8 +12,6 @@ namespace std
     }
 }
 #include <iostream>
-
-using namespace std;
 
 Grid::Grid()
 {
@@ -94,7 +92,7 @@ Récupère la température de la case dindex indexCase et celles de ses vo
 **/
 float* Grid::getLotTemperatures(int x, int y)
 {
-	float* lotTemperatures = new float[9];
+	float lotTemperatures[9]; //initialise with the good length
 	int i = 0, j, k;
 	for (j = x - 1; j <= (x + 1); j++)
 	{
