@@ -1,4 +1,19 @@
 #include "Grid.h"
+#include <string>
+#include <sstream>
+
+namespace std
+{
+    template < typename T > std::string to_string( const T& n )
+    {
+        std::ostringstream stm ;
+        stm << n ;
+        return stm.str() ;
+    }
+}
+#include <iostream>
+
+using namespace std;
 
 Grid::Grid()
 {
@@ -165,4 +180,16 @@ int Grid::getIndexFromCoordinates(int x, int y){
 	}
 
 	return index;
+}
+
+char* Grid::toStringPipe() {
+    std::string stringRetour;
+
+    for (int j = 0; j<this->getRows(); j++){
+		for (int k = 0; k<this->getCols(); k++){
+			std::string temp = std::to_string(getCell(j,k).getTemperature()) + "|";
+            stringRetour = stringRetour + temp;
+		}
+	}
+	return (char*)stringRetour.c_str();
 }

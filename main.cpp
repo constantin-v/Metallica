@@ -8,8 +8,7 @@
 using namespace std;
 
 //global
-Grid startingTemperatures;
-Grid endingTemperatures;
+Grid** startingTemperatures;
 int rows = 3;
 int cols = 4;
 float ambientTemperature = 20;
@@ -17,12 +16,15 @@ float ambientTemperature = 20;
 void initialiseTemperatures();
 void printGrid(Grid grid);
 Grid decreaseTemperature(Grid grid);
+int* getCoordinatesFromIndex(int index);
+int getIndexFromCoordinates(int x, int y);
+void printTableOfGrid(Grid** tableOfGrid);
 
 int main(int argc, char *argv[])
 {
     initialiseTemperatures();
 
-	printGrid(startingTemperatures);
+	printTableOfGrid(startingTemperatures);
 	cout << endl;
 
 	printf("Pere : Je suis VIVAAAAAAAANT.\n");
@@ -63,7 +65,7 @@ int main(int argc, char *argv[])
 	printf("Pere : Toutes les instances sont lancees.\n");
 
     //Communication pere --> coordinateur
-    float temperatureAmbiantToSend = startingTemperatures.getAmbientTemperature();
+    float temperatureAmbiantToSend = startingTemperatures[0][0].getAmbientTemperature();
     //printf ("Pere : Envoi vers le coordinateur de la temperature ambiante (%f°C)\n", temperatureAmbiantToSend);
     MPI_Send (&temperatureAmbiantToSend, 1, MPI_FLOAT, 0, 0, intercomm);
 
@@ -75,16 +77,18 @@ int main(int argc, char *argv[])
 
 	// Communication pere -> fils
 
-	float temperatureToSend;
+	char *temperaturesToSend;
 	for (i=1; i< rows * cols + 1; i++)	{
         //JALON 7
         //On crée un Grid 3x3 contenant les 9 témperatures de la case maître
         //On envoi cette grid à chaque esclave
+        int *coords = getCoordinatesFromIndex(i-1);
+        temperaturesToSend = startingTemperatures[coords[0]][coords[1]].toStringPipe();
 
         //JALON 5
-        temperatureToSend = startingTemperatures.getCell(i-1).getTemperature();
+        //temperaturesToSend = startingTemperatures.getCell(i-1).getTemperature();
         //printf ("Pere : Envoi vers l'esclave n°%d de sa temperature case (%f°C).\n", i, temperatureToSend);
-		MPI_Send (&temperatureToSend, 1, MPI_FLOAT, i, 0, intercomm);
+		MPI_Send (&temperaturesToSend, 1, MPI_CHAR, i, 0, intercomm);
 
         //printf ("Pere : Envoi du nombre de ligne vers l'esclave n%d \n", i);
         MPI_Send (&rows, 1, MPI_INT, i, 0, intercomm);
@@ -134,10 +138,7 @@ les temperature de la matrice de refroidissement
 */
 void initialiseTemperatures()
 {
-	startingTemperatures.setRows(rows);
-	startingTemperatures.setCols(cols);
-	startingTemperatures.setAmbientTemperature(ambientTemperature);
-	startingTemperatures.allocateGridTab();
+	Grid** startingTemperatures;
 
 	int i;
 	int j;
@@ -145,20 +146,29 @@ void initialiseTemperatures()
 	{
 		for (j = 0; j<cols; j++)
 		{
-			if (i == 1 && j == 2)
-			{
-				// startingTemperatures.grid[i][j].setTemperature(50);
-				startingTemperatures.getCell(i, j).setTemperature(90);
-			}
-			else
-			{
-				//startingTemperatures.grid[i][j].setTemperature(30);
-				startingTemperatures.getCell(i, j).setTemperature(44.0f);
-			}
+            //On créer une grille 3*3 par case au lieu de 1 température par case.
+            Grid tempGrid;
+            tempGrid.setRows(3);
+            tempGrid.setCols(3);
+            tempGrid.setAmbientTemperature(ambientTemperature);
+            tempGrid.allocateGridTab();
+
+            for (int k = 0;k <3;k++) {
+                for(int l = 0;l <3;l++) {
+                    if (k == 1 && l == 1) {
+                        tempGrid.getCell(i, j).setTemperature(90);
+                    }	else	{
+                        tempGrid.getCell(i, j).setTemperature(44.0f);
+                    }
+                }
+            }
+
+            startingTemperatures[i][j] = tempGrid;
+
 		}
 	}
 
-	endingTemperatures.setRows(rows);
+	/*endingTemperatures.setRows(rows);
 	endingTemperatures.setCols(cols);
 	endingTemperatures.setAmbientTemperature(ambientTemperature);
 	endingTemperatures.allocateGridTab();
@@ -169,14 +179,14 @@ void initialiseTemperatures()
 		{
 			endingTemperatures.getCell(i, j).setTemperature(0.0f);
 		}
-	}
+	}*/
 }
 
 void printGrid(Grid grid)
 {
-	for (int i = 0; i < rows; i++)
+	for (int i = 0; i < 3; i++)
 	{
-		for (int j = 0; j < cols; j++)
+		for (int j = 0; j < 3; j++)
 		{
 			float value = grid.getCell(i, j).getTemperature();
 			cout << value << "  ";
@@ -184,5 +194,51 @@ void printGrid(Grid grid)
 		cout << endl;
 	}
 }
+
+void printTableOfGrid(Grid** tableOfGrid)
+{
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < cols; j++)
+		{
+			printGrid(tableOfGrid[i][j]);
+		}
+		cout << endl;
+	}
+}
+
+int* getCoordinatesFromIndex(int index){
+	int* coordinates = new int[2];
+	int count = -1;
+
+	for (int j = 0; j< rows; j++){
+		for (int k = 0; k< cols; k++){
+			count++;
+			if (count == index){
+				coordinates[0] = j;
+				coordinates[1] = k;
+				break;
+			}
+		}
+	}
+
+	return coordinates;
+}
+
+int getIndexFromCoordinates(int x, int y){
+	int index = -1;
+
+	for (int j = 0; j < rows; j++){
+		for (int k = 0; k < cols; k++){
+			index++;
+			if (x == j && y == k){
+				break;
+			}
+		}
+	}
+
+	return index;
+}
+
 
 

@@ -23,6 +23,7 @@ class Grid
         void setAmbientTemperature(float v);
         int* getCoordinatesFromIndex(int index);
         int getIndexFromCoordinates(int x, int y);
+        char* toStringPipe();
     protected:
     private:
         Cell **grid;

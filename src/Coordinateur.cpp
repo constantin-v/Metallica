@@ -3,6 +3,8 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include "Cell.h"
+#include "Grid.h"
 
 namespace std
 {

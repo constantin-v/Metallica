@@ -1,5 +1,7 @@
 #include <mpi.h>
 #include <stdio.h>
+#include "Cell.h"
+#include "Grid.h"
 
 // Global
 int rows, cols;
