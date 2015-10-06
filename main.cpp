@@ -98,6 +98,8 @@ int main(int argc, char *argv[])
 	printf ("Pere : Fin.\n");
 
 	MPI_Finalize();
+
+	delete[] temperatureToSend;
 	return 0;
 
 }

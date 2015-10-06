@@ -265,14 +265,16 @@ int main( int argc, char *argv[] )
         //Directive de l'énoncé (envoyé 10 FOIS aux voisins)
         while(isNotEnd){
 
-            //printf ("Esclave n°%d : Attente reception temperature ambiante!\n", myrank);
             //--Reception de la temperature ambiante du COORDINATEUR
             MPI_Recv(&ambientTemperature, 1, MPI_FLOAT, 0, 0, MPI_COMM_WORLD, &etat);
-            printf ("Esclave n°%d : Reception de la temperature ambiante (%f°C) de la part du coordinateur !\n", myrank, ambientTemperature);
 
             if(ambientTemperature == -500) {
+                printf ("Esclave n°%d : Reception de la temperature ambiante (%f°C) de la part du coordinateur ! On arrete le programme\n", myrank, ambientTemperature);
                 //Si on reçoit un int de -500, c'est que le coordinateur nous dit que c'est terminé
                 isNotEnd = false;
+
+                //l'esclave a détecté que c'est la fin du programme, il renvoi la valeur au coordinateur pour lui dire qu'il a terminé
+                MPI_Send(&ambientTemperature, 1, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
             } else {
 
                 //Envoyer en asynchrone à tous ces voisins DIRECTS
@@ -293,7 +295,6 @@ int main( int argc, char *argv[] )
                         compteur++;
                     }
                 }
-
 
                 //Réception des (grilles) températures voisins DIRECTS en synchrone
                 float *temperaturesVoisins = new float[8];
@@ -334,7 +335,6 @@ int main( int argc, char *argv[] )
                 gridFloat = temperatures[4];
 
                 MPI_Send(temperatures[4], 10, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
-                printf ("Esclave n°%d : Envoi de ses temperatures au coordinateur !\n", myrank);
             }
         }
 	}

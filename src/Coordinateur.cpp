@@ -20,6 +20,9 @@ using namespace std;
 int step = 0;
 float lastAverageTemp = 1000;
 
+//Valeur a changer pour modifier la durée du refroidissement
+float differenceBetweenMinMaxValueToStopCooldown = 0.1;
+
 void printGrid(float* table, int rows, int cols)
 {
 	int count = -1;
@@ -133,24 +136,14 @@ float getAvgTemperature(float **gridTemperatures)
     float* allGridsTemps = new float[12];
     float totalTemperature = 0.0f;
 
-    //cout << "VALEURS de grid " << gridTemperatures[9][0] << endl;
-    printf("%f|%f|%f|\n%f|%f|%f|\n%f|%f|%f|",
-    gridTemperatures[0][1],gridTemperatures[0][2],gridTemperatures[0][3],
-    gridTemperatures[0][4],gridTemperatures[0][5],gridTemperatures[0][6],
-    gridTemperatures[0][7],gridTemperatures[0][8],gridTemperatures[0][9]);
     for(int i=0; i<12; i++)
     {
         float gridTemp = 0.0f;
         for(int j=1 ; j<10 ; j++){
             gridTemp += gridTemperatures[i][j];
-            //cout << "get grid temperature i/j : " << i << "/" << j << endl;
         }
-
         allGridsTemps[i] = gridTemp / 9;
-        //cout << "DEBUG DE MES COUILLES i:" << i << endl;
     }
-
-    //cout << "DEBUG DE MES COUILLES 5" << endl;
 
     for(int i=0 ; i<12 ; i++){
         totalTemperature += allGridsTemps[i];
@@ -161,20 +154,16 @@ float getAvgTemperature(float **gridTemperatures)
 
 bool isCooldownTerminated(float **gridTemperatures){
 
-
-
     float newAverageTemp = getAvgTemperature(gridTemperatures);
-    cout << "new average : "<< newAverageTemp << endl;
-
-    float differenceBetweenMinMaxValueToStopCooldown = 0.1;
 
     float differenceBetweenMinMaxValue = lastAverageTemp - newAverageTemp;
 
-printf("OLD: %f\n", lastAverageTemp);
-printf("NEW: %f\n", newAverageTemp);
+    printf("OLD average: %f\n", lastAverageTemp);
+    printf("NEW average: %f\n", newAverageTemp);
+
     lastAverageTemp = newAverageTemp;
 
-    cout << "ON TERMINE (" << differenceBetweenMinMaxValue << " < " << differenceBetweenMinMaxValueToStopCooldown << ") ? :" << (differenceBetweenMinMaxValue < differenceBetweenMinMaxValueToStopCooldown) << endl;
+    cout << "ON TERMINE ?(" << differenceBetweenMinMaxValue << " < " << differenceBetweenMinMaxValueToStopCooldown << ") ? " << (differenceBetweenMinMaxValue < differenceBetweenMinMaxValueToStopCooldown) << endl;
 
     return differenceBetweenMinMaxValue < differenceBetweenMinMaxValueToStopCooldown;
 }
@@ -183,7 +172,7 @@ int main( int argc, char *argv[] )
 {
 	int myrank;
 	float temperature;
-	float** temperatures = new float*[9];
+	float** temperatures = new float*[12];
 	int rows = 2;
 	int cols = 2;
 	MPI_Comm parent;
@@ -224,7 +213,8 @@ int main( int argc, char *argv[] )
 
 		while(isNotEnd)	{
 
-            if(isCooldownTerminated(temperatures)) {
+          //  if(isCooldownTerminated(temperatures)) {
+           if(isCooldownTerminated(temperatures)) {
                 isNotEnd = false;
                 temperature = -500;
             }
@@ -232,7 +222,6 @@ int main( int argc, char *argv[] )
             //On continue le processus
             for (int j=1; j<cols * rows + 1; j++)	{
                 //Si il n'y a plus assez de refroidissement
-                //printf ("Coordinateur : Envoi vers l'esclave n°%d de la temperature ambiante (%f°C).\n", j, temperature);
                 MPI_Send (&temperature, 1, MPI_FLOAT,j, 0, MPI_COMM_WORLD);
             }
 
@@ -248,12 +237,26 @@ int main( int argc, char *argv[] )
                 }
 
                 printSVG(temperatures,rows,cols, temperature);
+            } else {
+                //boucle qui permet d'attendre que tous les esclaves se terminent
+                for (int k=1; k<cols * rows + 1; k++) {
+                    float temp;
+                    MPI_Recv(&temp, 1, MPI_FLOAT,k, 0, MPI_COMM_WORLD, &etat);
+                }
+
+                //Libération de la mémoire résevée par le tableau
+                for(int i =0;i< 12;i++) {
+                    delete[] temperatures[i];
+                }
+                delete[] temperatures;
+
+                char response = 'K';
+                MPI_Send(&response, 1, MPI_CHAR, 0, 0, parent);
+                printf ("Coordinateur : Envoi vers le pere !\n");
             }
 		}
 
-		char response = 'K';
-		MPI_Send(&response, 1, MPI_CHAR, 0, 0, parent);
-		printf ("Coordinateur : Envoi vers le pere !\n");
+
 	}
 
 	printf ("Coordinateur : FIN !\n");
