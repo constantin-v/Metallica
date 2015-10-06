@@ -161,7 +161,7 @@ float* mergeTemperaturesGrid(float** neighboursTemps){
 
     for(int i = 1 ; i < 10 ; i++){
         temperaturesGrid[index] = neighboursTemps[4][i];
-        printf("RANG : %f", neighboursTemps[4][9]);
+        printf("RANG : %f //// LAST TEMPERATURE %f \n", neighboursTemps[4][0],neighboursTemps[4][9]);
         index++;
         if(index%5 == 0){
             index=index+2;
@@ -185,12 +185,12 @@ float* mergeTemperaturesGrid(float** neighboursTemps){
     temperaturesGrid[24] = neighboursTemps[7][3];
     temperaturesGrid[25] = neighboursTemps[8][1];
 
-    printf("Temperature around esclave. Temperatures : \n|%f|%f|%f|%f|%f|\n|%f|%f|%f|%f|%f|\n|%f|%f|%f|%f|%f|\n|%f|%f|%f|%f|%f|\n|%f|%f|%f|%f|%f|\n",
+    /*printf("Temperature around esclave. Temperatures : \n|%f|%f|%f|%f|%f|\n|%f|%f|%f|%f|%f|\n|%f|%f|%f|%f|%f|\n|%f|%f|%f|%f|%f|\n|%f|%f|%f|%f|%f|\n",
                                         temperaturesGrid[1],temperaturesGrid[2],temperaturesGrid[3],temperaturesGrid[4],temperaturesGrid[5],
                                         temperaturesGrid[6],temperaturesGrid[7],temperaturesGrid[8],temperaturesGrid[9],temperaturesGrid[10],
                                         temperaturesGrid[11],temperaturesGrid[12],temperaturesGrid[13],temperaturesGrid[14],temperaturesGrid[15],
                                         temperaturesGrid[16],temperaturesGrid[17],temperaturesGrid[18],temperaturesGrid[19],temperaturesGrid[20],
-                                        temperaturesGrid[21],temperaturesGrid[22],temperaturesGrid[23],temperaturesGrid[24],temperaturesGrid[25]);
+                                        temperaturesGrid[21],temperaturesGrid[22],temperaturesGrid[23],temperaturesGrid[24],temperaturesGrid[25]);*/
 
     return temperaturesGrid;
 }
@@ -313,13 +313,13 @@ int main( int argc, char *argv[] )
             	if(voisins[rankVoisin] != 0){
             		//MPI_Isend(&temperature, 1, MPI_FLOAT, voisins[rankVoisin], 0, MPI_COMM_WORLD, &requestNull);
 
-                    printf("Temperature BLAAAA AVANT ENVOI ENVOYEUR %d===%f RECEPTIONNEUR %d. Temperatures : |%f|%f|%f|%f|%f|%f|%f|%f|%f| \n",
+                   /* printf("Temperature BLAAAA AVANT ENVOI ENVOYEUR %d===%f RECEPTIONNEUR %d. Temperatures : |%f|%f|%f|%f|%f|%f|%f|%f|%f| \n",
                                                                                                         myrank,gridFloat[0], voisins[rankVoisin],
                                                                                                         gridFloat[1],
                                                                                                         gridFloat[2], gridFloat[3],
                                                                                                         gridFloat[4], gridFloat[5],
                                                                                                         gridFloat[6], gridFloat[7],
-                                                                                                        gridFloat[8], gridFloat[9]);
+                                                                                                        gridFloat[8], gridFloat[9]);*/
 
             		MPI_Isend(gridFloat, 10, MPI_FLOAT, voisins[rankVoisin], 0, MPI_COMM_WORLD, &requestNull);
 
@@ -359,7 +359,10 @@ int main( int argc, char *argv[] )
                 */
             	int index = getIndexInTemperaturesTable(receivedTemp[0], myrank);
             	if(index != -1) {
-                    temperatures[index] = receivedTemp;
+
+            	//WORKS
+                    temperatures[index] = receivedTemp; //ICI on met un tab 10 dans un tab 9
+
 
                    // if(myrank == 1){
                         cout << "mise à jour tableau 3x3 de l'esclave " << myrank <<endl;
@@ -373,15 +376,35 @@ int main( int argc, char *argv[] )
 
             //}
 
-            // On calcul les moyennes de chaques cases de la grille de l'esclave en cours.
-            temperatures[4] = getDecreasedTemperature(temperatures);
-            gridFloat = temperatures[4];
-
-          /*  printf("Temperature calcule esclave N°%d. Temperatures : |%f|%f|%f|%f|%f|%f|%f|%f|%f| \n", myrank, temperatures[4][0],temperatures[4][1],
+            printf("Temperature CALCULE AVANT DIMINUTION RECEPTIONNEUR N°%d   ENVOYEUR %f. Temperatures : |%f|%f|%f|%f|%f|%f|%f|%f|%f| \n", myrank, temperatures[4][0],temperatures[4][1],
                                                                                                         temperatures[4][2], temperatures[4][3],
                                                                                                         temperatures[4][4], temperatures[4][5],
                                                                                                         temperatures[4][6], temperatures[4][7],
-                                                                                                        temperatures[4][8]);*/
+                                                                                                        temperatures[4][8],temperatures[4][9]);
+
+            // On calcul les moyennes de chaques cases de la grille de l'esclave en cours.
+            temperatures[4] = getDecreasedTemperature(temperatures);
+            //gridFloat = temperatures[4];
+
+
+
+            //On met temperatures qui est un tableau de 9 dans gridFloat qui est un tableau de 10
+            //On il faut faire une boucle pour ne pas écraser la case 0 de gridFloat
+            gridFloat[0] = myrank;
+
+            for(int z = 1; z < 10;z++){
+                gridFloat[z] = temperatures[4][z-1];
+            }
+
+             /*printf("Temperature BLAAAA AVANT ENVOI ENVOYEUR %d==%f. Temperatures : |%f|%f|%f|%f|%f|%f|%f|%f|%f| \n",
+                                                                                                        myrank, gridFloat[0], gridFloat[1],
+                                                                                                        gridFloat[2], gridFloat[3],
+                                                                                                        gridFloat[4], gridFloat[5],
+                                                                                                        gridFloat[6], gridFloat[7],
+                                                                                                        gridFloat[8], gridFloat[9]);*/
+
+
+
 
             MPI_Send(temperatures[4], 9, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
             printf ("Esclave n°%d : Envoi de ses temperatures au coordinateur !\n", myrank);

@@ -72,7 +72,7 @@ void printSVG(float** table, int rows, int cols, float ambiantTemp)
 
 
     std::string name = "Metallica" + std::to_string(step) + ".html";
-    cout << name << endl;
+    cout << name << "/***********************************************************************/"<< endl;
     std::ofstream outfile;
     outfile.open (name.c_str());
     outfile << "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"no\"?>";
@@ -190,7 +190,6 @@ int main( int argc, char *argv[] )
 
 				//printf ("Coordinateur : Reception de l'esclave n°%d: %f°C \n", k, temperature);
 				temperatures[k-1] = storeTemperature;
-				cout << "Coordinateur 9" << endl;
 			}
             /*cout << "TemperatureE esclave n°" << myrank << ".Index:" << temperatures[0][0] << "."
                                                                     << temperatures[0][1] << "/"
