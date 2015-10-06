@@ -172,8 +172,8 @@ int main( int argc, char *argv[] )
             temperatures[i] =  temp;
         }
 
-
-		for (int i=1; i<10; i++)	{
+        //DEBUG i< 10
+		for (int i=1; i<3; i++)	{
 			for (int j=1; j<cols * rows + 1; j++)	{
 
 		        float temperatureToSend = temperature;
