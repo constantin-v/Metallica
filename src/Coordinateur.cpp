@@ -3,8 +3,6 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-#include "Cell.h"
-#include "Grid.h"
 
 namespace std
 {
@@ -106,7 +104,7 @@ void printSVG(float** table, int rows, int cols, float ambiantTemp)
             outfile << "<rect x=\""<< xpos <<"\" y=\""<< ypos <<"\" width=\""<< widthRectangle <<"\" height=\""<< heightRectangle <<"\" fill-opacity=\"0.1\" fill=\"white\"/>" << std::endl;
 
             //On creer les mini-plaques (toujours 3x3)
-            int subcount = -1;
+            int subcount = 0;
             for (int k = 0; k < 3; k++)
             {
                 for (int l = 0; l < 3; l++)
@@ -154,9 +152,6 @@ int main( int argc, char *argv[] )
 		MPI_Recv(&cols, 1, MPI_INT, 0, 0, parent, &etat);
 		printf ("Coordinateur : Reception du nombre de colonnes %d !\n", cols);
 
-        //OLD
-		//temperatures =  new float[cols * rows];
-
         for(int i =0;i< 9;i++) {
             float* temp = new float[10];
             temp[0] = 0;
@@ -172,8 +167,7 @@ int main( int argc, char *argv[] )
             temperatures[i] =  temp;
         }
 
-        //DEBUG i< 10
-		for (int i=1; i<3; i++)	{
+		for (int i=1; i<10; i++)	{
 			for (int j=1; j<cols * rows + 1; j++)	{
 
 		        float temperatureToSend = temperature;
@@ -186,23 +180,12 @@ int main( int argc, char *argv[] )
 			for (int k=1; k<cols * rows + 1; k++)	{
 
                 float* storeTemperature = new float[9];
-				MPI_Recv(storeTemperature, 9, MPI_FLOAT,k, 0, MPI_COMM_WORLD, &etat);
+				MPI_Recv(storeTemperature, 10, MPI_FLOAT,k, 0, MPI_COMM_WORLD, &etat);
 
-				//printf ("Coordinateur : Reception de l'esclave n°%d: %f°C \n", k, temperature);
+                //On met a jour les temperatures de la grille globale avec ce qu'on reçoit des esclaves
 				temperatures[k-1] = storeTemperature;
 			}
-            /*cout << "TemperatureE esclave n°" << myrank << ".Index:" << temperatures[0][0] << "."
-                                                                    << temperatures[0][1] << "/"
-                                                                    << temperatures[0][2] << "/"
-                                                                    << temperatures[0][3] << "/"
-                                                                    << temperatures[0][4] << "/"
-                                                                    << temperatures[0][5] << "/"
-                                                                    << temperatures[0][6] << "/"
-                                                                    << temperatures[0][7] << "/"
-                                                                    << temperatures[0][8] << "/"
-                                                                    << temperatures[0][9] << endl;*/
 
-			//printGrid(temperatures,rows,cols);
 			printSVG(temperatures,rows,cols, temperature);
 		}
 

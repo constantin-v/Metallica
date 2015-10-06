@@ -1,36 +1,25 @@
 #include <iostream>
 #include <mpi.h>
 #include <stdio.h>
-#include "Cell.h"
-#include "Grid.h"
 #include <omp.h>
 
 using namespace std;
 
 //global
-Grid startingTemperatures;
-Grid endingTemperatures;
 int rows = 3;
 int cols = 4;
 float ambientTemperature = 20;
 
 void initialiseTemperatures();
-void printGrid(Grid grid);
-Grid decreaseTemperature(Grid grid);
 
 int main(int argc, char *argv[])
 {
-    //initialiseTemperatures();
 
-	//printGrid(startingTemperatures);
-	//cout << endl;
-
-	printf("Pere : Je suis VIVAAAAAAAANT.\n");
-	int i, compteur, errCodes[cols * rows];
+	printf("Maitre : DEBUT DU PROGRAMME.\n");
+	int i,  errCodes[cols * rows];
 	char returnCodeFromChildren;
 	MPI_Status etat;
 	MPI_Comm intercomm;
-	MPI_Request requestNull;
 
 	char *cmds[2] = {
 		"./coordinateur",
@@ -113,60 +102,4 @@ int main(int argc, char *argv[])
 
 }
 
-/* Initialise :
-les temperature dans la matrice de métal 3x3 de départ
-les temperature de la matrice de refroidissement
-*/
-void initialiseTemperatures()
-{
-	startingTemperatures.setRows(rows);
-	startingTemperatures.setCols(cols);
-	startingTemperatures.setAmbientTemperature(ambientTemperature);
-	startingTemperatures.allocateGridTab();
-
-	int i;
-	int j;
-	for (i = 0; i<rows; i++)
-	{
-		for (j = 0; j<cols; j++)
-		{
-			if (i == 1 && j == 2)
-			{
-				// startingTemperatures.grid[i][j].setTemperature(50);
-				startingTemperatures.getCell(i, j).setTemperature(90);
-			}
-			else
-			{
-				//startingTemperatures.grid[i][j].setTemperature(30);
-				startingTemperatures.getCell(i, j).setTemperature(44.0f);
-			}
-		}
-	}
-
-	endingTemperatures.setRows(rows);
-	endingTemperatures.setCols(cols);
-	endingTemperatures.setAmbientTemperature(ambientTemperature);
-	endingTemperatures.allocateGridTab();
-
-	for (i = 0; i<rows; i++)
-	{
-		for (j = 0; j<cols; j++)
-		{
-			endingTemperatures.getCell(i, j).setTemperature(0.0f);
-		}
-	}
-}
-
-void printGrid(Grid grid)
-{
-	for (int i = 0; i < rows; i++)
-	{
-		for (int j = 0; j < cols; j++)
-		{
-			float value = grid.getCell(i, j).getTemperature();
-			cout << value << "  ";
-		}
-		cout << endl;
-	}
-}
 
