@@ -118,6 +118,7 @@ Grid parseFloatsToGrid(float* temperatures){
 	return grid;
 }
 
+//Retourne la position de l'esclave reçu par rapport à l'esclave en cours
 int getIndexInTemperaturesTable(float index, int esclaveIndex){
 
     int indexRelatif = index - esclaveIndex;
@@ -174,7 +175,7 @@ float* mergeTemperaturesGrid(float** neighboursTemps){
     temperaturesGrid[6] = neighboursTemps[3][3];
     temperaturesGrid[10] = neighboursTemps[5][1];
     temperaturesGrid[11] = neighboursTemps[3][6];
-    temperaturesGrid[13] = neighboursTemps[5][4];
+    temperaturesGrid[15] = neighboursTemps[5][4];
     temperaturesGrid[16] = neighboursTemps[3][9];
     temperaturesGrid[20] = neighboursTemps[5][7];
     temperaturesGrid[21] = neighboursTemps[6][3];
@@ -237,11 +238,11 @@ int main( int argc, char *argv[] )
 	if (parent == MPI_COMM_NULL) {
 		printf ("Esclave %d : Pas de pere !\n", myrank);
 	} else {
+
         //JALON 7
         //Reception de la grid 3x3 du thread maitre (MPI)
         MPI_Recv(gridFloat, 10, MPI_FLOAT, 0, 0, parent, &etat);
         printf ("Esclave n°%d : Reception de la grid de la part du maitre !\n", myrank);
-        //grid = parseFloatsToGrid(gridChar);
 
         //JALON 7 -- On remplis par défaut notre tableau de résultat avec des GRID de temperature ambiante
         for(int i =0;i< 9;i++) {
@@ -259,10 +260,18 @@ int main( int argc, char *argv[] )
             temperatures[i] =  temp;
         }
 
-        //On met dans le rang de l'esclave actuel au début de la liste des températures à envoyer
+        /*
+            On met le rang de l'esclave actuel au début de la liste des températures à envoyer
+            Cela permettra de les replacer dans le bon ordre lors de la reception
+        */
         gridFloat[0] = myrank;
 
-        //On met dans notre tableau de résultat les températures de notre esclave
+        /*
+        On met dans notre tableau (au centre) de résultat les températures de notre esclave
+        0 |  1  | 2
+        3 | -4- | 5
+        6 |  7  | 8
+        */
         temperatures[4] = gridFloat;
 
         MPI_Recv(&rows, 1, MPI_INT, 0, 0, parent, &etat);
@@ -271,43 +280,40 @@ int main( int argc, char *argv[] )
 		MPI_Recv(&cols, 1, MPI_INT, 0, 0, parent, &etat);
 		printf ("Esclave n°%d : Reception du nombre de colonnes %d !\n", myrank, cols);
 
+        //Calcul des coordonées de l'esclave pour distinguer ces voisins DIRECTS
 		int *coords = getCoordinatesFromIndex(myrank);
+		int *voisins = getVoisins(coords); // renvoi ==> [0,x,x,x,0,0....] ou x correspond aux index voisins direct.
 		//printf("Coordonnees esclave N°%d : %d;%d \n", myrank,coords[0],coords[1]);
 
-		int *voisins = getVoisins(coords);
-
-        for(int i=1; i< 10; i++){
+        //Directive de l'énoncé (envoyé 10 FOIS aux voisins)
+        for(int i = 1; i < 10; i++){
         	//printf ("Esclave n°%d : Attente reception temperature ambiante!\n", myrank);
-
-
+            //--Reception de la temperature ambiante du COORDINATEUR
         	MPI_Recv(&ambientTemperature, 1, MPI_FLOAT, 0, 0, MPI_COMM_WORLD, &etat);
             printf ("Esclave n°%d : Reception de la temperature ambiante (%f°C) de la part du coordinateur !\n", myrank, ambientTemperature);
             //grid.setAmbientTemperature(ambientTemperature);
 
-
-            //Envoyer en asynchrone à tous ces voisins
+            //Envoyer en asynchrone à tous ces voisins DIRECTS
             int nbVoisins = getNbVoisins(voisins);
+            //printf("Nombre de voisins de l'esclave n°%d : %d \n", myrank, nbVoisins);
             int *tableauVoisinsTries = new int[8];
             int compteur = 0;
 
-            //On envoi notre temprature à tous nos voisins
-            //JALON 7 -- ENVOI GRID 3x3 A TOUS NOS VOISINS
-            //printf("Nombre de voisins de l'esclave n°%d : %d \n", myrank, nbVoisins);
+            //On envoi nos valeurs à tous nos voisins DIRECTS
             for(int rankVoisin = 0 ; rankVoisin < 9 ; rankVoisin++){
+            	//Si l'esclave en cours d'analyse est un voisin direct, on lui envoi nos températures.
             	if(voisins[rankVoisin] != 0){
             		//MPI_Isend(&temperature, 1, MPI_FLOAT, voisins[rankVoisin], 0, MPI_COMM_WORLD, &requestNull);
-
-
             		MPI_Isend(gridFloat, 10, MPI_FLOAT, voisins[rankVoisin], 0, MPI_COMM_WORLD, &requestNull);
+
+            		//On stocke un par un les esclaves a qui on a envoyé les valeurs pour faciliter la phase de reception
             		tableauVoisinsTries[compteur] = voisins[rankVoisin];
             		compteur++;
-            		//printf("Message de esclave N°%d vers esclave %d \n",myrank, voisins[rankVoisin] );
             	}
             }
 
 
-            //Attendre réception des températures voisins en synchrone
-            //JALON 7 -- RECEPTION GRID DE TOUS NOS VOISINS
+            //Réception des (grilles) températures voisins DIRECTS en synchrone
             float *temperaturesVoisins = new float[8];
             for(int k = 0 ; k < nbVoisins ; k++){
             	float* receivedTemp = new float[10];
@@ -315,19 +321,29 @@ int main( int argc, char *argv[] )
             	MPI_Recv(receivedTemp, 10, MPI_FLOAT, tableauVoisinsTries[k], 0, MPI_COMM_WORLD, &etat);
             	//printf("Message recu de esclave N°%d \n", tableauVoisinsTries[k]);
             	//temperaturesVoisins[k] = receivedTemp;
-            	int index = getIndexInTemperaturesTable(receivedTemp[0],myrank);
+
+            	/*
+                    On calcul la position de l'esclave emetteur
+                    par rapport a l'esclave recepteur
+                    Exemple :
+                    1 |  2  | 3  | 4
+                    5 |  6  | 7  | 8
+                    9 |  10  | 11 | 12
+                    On place le recepteur au centre et on recréer une plaque 3x3 autour de lui
+                    Si esclave emetteur = 4 et recepteur 8 ==> emetteur - recepteur = -4
+                    -5 |  -4 (emett) | -3
+                    -1 |  recepteur  |  1
+                    +3 |      +4     | +5
+                    Par rapport à ce tableau on voit que la position est correct (
+                */
+            	int index = getIndexInTemperaturesTable(receivedTemp[0], myrank);
             	if(index != -1) {
                     temperatures[index] = receivedTemp;
             	}
 
             }
 
-            //JALON 7 --
-            //On crée un tableau de 9x9 contenant les 9 grids crées précédemment
-            //La case de l'esclave central se retrouve au millieu de ce tableau
-            //On parcours la grid 3x3 centrale, en utilisant les cases à coté pour calculer la moyenne de chaque case
-
-
+            // On calcul les moyennes de chaques cases de la grille de l'esclave en cours.
             temperatures[4] = getDecreasedTemperature(temperatures);
 
 

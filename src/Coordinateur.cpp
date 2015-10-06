@@ -57,6 +57,7 @@ string getColorByTemperature(float temp){
 
 void printSVG(float** table, int rows, int cols, float ambiantTemp)
 {
+    int ambiantTempMargin = 50;
     //taille des rectangle des mini-plaque
     int widthSubRectangle = 100;
     int heightSubRectangle = 100;
@@ -83,11 +84,11 @@ void printSVG(float** table, int rows, int cols, float ambiantTemp)
     outfile << "</head>";
     outfile << "<body>";
     outfile << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\"";
-    outfile << "width=\"" << widthTotal + 100 << "px\" height=\""<< heightTotal +100 <<"px\">" << std::endl;
+    outfile << "width=\"" << widthTotal + (ambiantTempMargin *2) << "px\" height=\""<< heightTotal + (ambiantTempMargin *2) <<"px\">" << std::endl;
 
     //root rectangle for ambiant temp
-    outfile << "<rect width=\""<< widthTotal + 100 <<"\" height=\""<< heightTotal + 100 <<"\" fill=\"" << getColorByTemperature(ambiantTemp) << "\" stroke=\"black\"/>" << std::endl;
-    outfile << "<text x=\""<< 25 <<"\" y=\""<< heightTotal + 25 <<"\" width=\""<< widthRectangle <<"\" height=\""<< heightRectangle <<"\" fill=\"#333333\"> Ambiant Temperature : " << ambiantTemp <<"</text>"<< std::endl;
+    outfile << "<rect width=\""<< widthTotal + (ambiantTempMargin *2) <<"\" height=\""<< heightTotal + (ambiantTempMargin *2) <<"\" fill=\"" << getColorByTemperature(ambiantTemp) << "\" stroke=\"black\"/>" << std::endl;
+    outfile << "<text x=\""<< 25 <<"\" y=\""<< 25 <<"\" width=\""<< widthRectangle <<"\" height=\""<< heightRectangle <<"\" fill=\"#CCCCCC\"> Ambiant Temperature : " << ambiantTemp <<"</text>"<< std::endl;
 
     //creation de la plaque maitre
     int count = -1;
@@ -98,11 +99,11 @@ void printSVG(float** table, int rows, int cols, float ambiantTemp)
             //creation des plaques filles
             count++;
             float* subtable = table[count];
-            int ypos = i * widthRectangle; //i creer les lignes donc la position y
-            int xpos = j * heightRectangle; // j creer les colonnes donc le x
+            int ypos = (i * widthRectangle) + ambiantTempMargin; //i creer les lignes donc la position y
+            int xpos = (j * heightRectangle) + ambiantTempMargin; // j creer les colonnes donc le x
 
             //on creer le rectangle qui contiendra les petites plaques
-            outfile << "<rect x=\""<< xpos <<"\" y=\""<< ypos <<"\" width=\""<< widthRectangle <<"\" height=\""<< heightRectangle <<"\" stroke=\"black\"/>" << std::endl;
+            outfile << "<rect x=\""<< xpos <<"\" y=\""<< ypos <<"\" width=\""<< widthRectangle <<"\" height=\""<< heightRectangle <<"\" fill-opacity=\"0.1\" fill=\"white\"/>" << std::endl;
 
             //On creer les mini-plaques (toujours 3x3)
             int subcount = -1;
@@ -132,7 +133,6 @@ int main( int argc, char *argv[] )
 {
 	int myrank;
 	float temperature;
-	float* storeTemperature = new float[9];
 	float** temperatures = new float*[9];
 	int rows = 2;
 	int cols = 2;
@@ -185,6 +185,7 @@ int main( int argc, char *argv[] )
 
 			for (int k=1; k<cols * rows + 1; k++)	{
 
+                float* storeTemperature = new float[9];
 				MPI_Recv(storeTemperature, 9, MPI_FLOAT,k, 0, MPI_COMM_WORLD, &etat);
 
 				//printf ("Coordinateur : Reception de l'esclave n°%d: %f°C \n", k, temperature);
