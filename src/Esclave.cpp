@@ -196,11 +196,14 @@ float* getRelativeToCellTempGrid(int index,float** neighboursTemps){
 }
 
 
+
+
 int main( int argc, char *argv[] )
 {
 	int myrank;
 	float ambientTemperature;
 	float** temperatures = new float*[10];
+
 	float* gridFloat = new float[10];
 	MPI_Comm parent;
 	MPI_Status etat;
@@ -208,6 +211,7 @@ int main( int argc, char *argv[] )
 	MPI_Comm_get_parent (&parent);
 	MPI_Comm_rank (MPI_COMM_WORLD,&myrank);
 	MPI_Request requestNull;
+	bool isNotEnd = true;
 
 	if (parent == MPI_COMM_NULL) {
 		printf ("Esclave %d : Pas de pere !\n", myrank);
@@ -259,73 +263,79 @@ int main( int argc, char *argv[] )
 		int *voisins = getVoisins(coords); // renvoi ==> [0,x,x,x,0,0....] ou x correspond aux index voisins direct.
 
         //Directive de l'énoncé (envoyé 10 FOIS aux voisins)
-        for(int i = 1; i < 10; i++){
-        	//printf ("Esclave n°%d : Attente reception temperature ambiante!\n", myrank);
+        while(isNotEnd){
+
+            //printf ("Esclave n°%d : Attente reception temperature ambiante!\n", myrank);
             //--Reception de la temperature ambiante du COORDINATEUR
-        	MPI_Recv(&ambientTemperature, 1, MPI_FLOAT, 0, 0, MPI_COMM_WORLD, &etat);
+            MPI_Recv(&ambientTemperature, 1, MPI_FLOAT, 0, 0, MPI_COMM_WORLD, &etat);
             printf ("Esclave n°%d : Reception de la temperature ambiante (%f°C) de la part du coordinateur !\n", myrank, ambientTemperature);
 
-            //Envoyer en asynchrone à tous ces voisins DIRECTS
-            int nbVoisins = getNbVoisins(voisins);
+            if(ambientTemperature == -500) {
+                //Si on reçoit un int de -500, c'est que le coordinateur nous dit que c'est terminé
+                isNotEnd = false;
+            } else {
 
-            int *tableauVoisinsTries = new int[8];
-            int compteur = 0;
+                //Envoyer en asynchrone à tous ces voisins DIRECTS
+                int nbVoisins = getNbVoisins(voisins);
 
-            //On envoi nos valeurs à tous nos voisins DIRECTS
-            for(int rankVoisin = 0 ; rankVoisin < 9 ; rankVoisin++){
-            	//Si l'esclave en cours d'analyse est un voisin direct, on lui envoi nos températures.
-            	if(voisins[rankVoisin] != 0){
+                int *tableauVoisinsTries = new int[8];
+                int compteur = 0;
 
-            		MPI_Isend(gridFloat, 10, MPI_FLOAT, voisins[rankVoisin], 0, MPI_COMM_WORLD, &requestNull);
+                //On envoi nos valeurs à tous nos voisins DIRECTS
+                for(int rankVoisin = 0 ; rankVoisin < 9 ; rankVoisin++){
+                    //Si l'esclave en cours d'analyse est un voisin direct, on lui envoi nos températures.
+                    if(voisins[rankVoisin] != 0){
 
-            		//On stocke un par un les esclaves a qui on a envoyé les valeurs pour faciliter la phase de reception
-            		tableauVoisinsTries[compteur] = voisins[rankVoisin];
-            		compteur++;
-            	}
+                        MPI_Isend(gridFloat, 10, MPI_FLOAT, voisins[rankVoisin], 0, MPI_COMM_WORLD, &requestNull);
+
+                        //On stocke un par un les esclaves a qui on a envoyé les valeurs pour faciliter la phase de reception
+                        tableauVoisinsTries[compteur] = voisins[rankVoisin];
+                        compteur++;
+                    }
+                }
+
+
+                //Réception des (grilles) températures voisins DIRECTS en synchrone
+                float *temperaturesVoisins = new float[8];
+                for(int k = 0 ; k < nbVoisins ; k++){
+
+                    float* receivedTemp = new float[10];
+
+                    MPI_Recv(receivedTemp, 10, MPI_FLOAT, tableauVoisinsTries[k], 0, MPI_COMM_WORLD, &etat);
+
+                    /*
+                        On calcul la position de l'esclave emetteur
+                        par rapport a l'esclave recepteur
+                        Exemple :
+                        1 |  2  | 3  | 4
+                        5 |  6  | 7  | 8
+                        9 |  10  | 11 | 12
+                        On place le recepteur au centre et on recréer une plaque 3x3 autour de lui
+                        Si esclave emetteur = 4 et recepteur 8 ==> emetteur - recepteur = -4
+                        -5 |  -4 (emett) | -3
+                        -1 |  recepteur  |  1
+                        +3 |      +4     | +5
+                        Par rapport à ce tableau on voit que la position est correct (
+                    */
+                    int index = getIndexInTemperaturesTable(receivedTemp[0], myrank);
+                    if(index != -1) {
+                        //Si le voisin existe (et donc n'est pas la température ambiante), on met a jour notre tableau temporaire de 9*9
+                        temperatures[index] = receivedTemp;
+                    }
+                }
+
+                // On calcul les moyennes de chaques cases de la grille de l'esclave en cours.
+                temperatures[4] = getDecreasedTemperature(temperatures);
+
+                //On remet le rang de l'esclave courant
+                temperatures[4][0] = myrank;
+
+                //On met a jour le tableau de l'esclave avec les nouvelles valeurs qu'il a calculé
+                gridFloat = temperatures[4];
+
+                MPI_Send(temperatures[4], 10, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
+                printf ("Esclave n°%d : Envoi de ses temperatures au coordinateur !\n", myrank);
             }
-
-
-            //Réception des (grilles) températures voisins DIRECTS en synchrone
-            float *temperaturesVoisins = new float[8];
-            for(int k = 0 ; k < nbVoisins ; k++){
-
-            	float* receivedTemp = new float[10];
-
-            	MPI_Recv(receivedTemp, 10, MPI_FLOAT, tableauVoisinsTries[k], 0, MPI_COMM_WORLD, &etat);
-
-            	/*
-                    On calcul la position de l'esclave emetteur
-                    par rapport a l'esclave recepteur
-                    Exemple :
-                    1 |  2  | 3  | 4
-                    5 |  6  | 7  | 8
-                    9 |  10  | 11 | 12
-                    On place le recepteur au centre et on recréer une plaque 3x3 autour de lui
-                    Si esclave emetteur = 4 et recepteur 8 ==> emetteur - recepteur = -4
-                    -5 |  -4 (emett) | -3
-                    -1 |  recepteur  |  1
-                    +3 |      +4     | +5
-                    Par rapport à ce tableau on voit que la position est correct (
-                */
-            	int index = getIndexInTemperaturesTable(receivedTemp[0], myrank);
-            	if(index != -1) {
-                    //Si le voisin existe (et donc n'est pas la température ambiante), on met a jour notre tableau temporaire de 9*9
-                    temperatures[index] = receivedTemp;
-            	}
-
-            }
-
-            // On calcul les moyennes de chaques cases de la grille de l'esclave en cours.
-            temperatures[4] = getDecreasedTemperature(temperatures);
-
-            //On remet le rang de l'esclave courant
-            temperatures[4][0] = myrank;
-
-            //On met a jour le tableau de l'esclave avec les nouvelles valeurs qu'il a calculé
-            gridFloat = temperatures[4];
-
-            MPI_Send(temperatures[4], 10, MPI_FLOAT, 0, 0, MPI_COMM_WORLD);
-            printf ("Esclave n°%d : Envoi de ses temperatures au coordinateur !\n", myrank);
         }
 	}
 

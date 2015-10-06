@@ -18,6 +18,7 @@ namespace std
 using namespace std;
 
 int step = 0;
+float lastAverageTemp = 1000;
 
 void printGrid(float* table, int rows, int cols)
 {
@@ -127,6 +128,52 @@ void printSVG(float** table, int rows, int cols, float ambiantTemp)
     step++;
 }
 
+float getAvgTemperature(float **gridTemperatures)
+{
+    float* allGridsTemps = new float[12];
+    float totalTemperature = 0.0f;
+
+    //cout << "VALEURS de grid " << gridTemperatures[9][0] << endl;
+
+    for(int i=0; i<12; i++)
+    {
+        float gridTemp = 0.0f;
+        for(int j=1 ; j<10 ; j++){
+            gridTemp += gridTemperatures[i][j];
+            //cout << "get grid temperature i/j : " << i << "/" << j << endl;
+        }
+
+        allGridsTemps[i] = gridTemp / 9;
+        //cout << "DEBUG DE MES COUILLES i:" << i << endl;
+    }
+
+    //cout << "DEBUG DE MES COUILLES 5" << endl;
+
+    for(int i=0 ; i<12 ; i++){
+        totalTemperature += allGridsTemps[i];
+    }
+
+    return (totalTemperature / 12);
+}
+
+bool isCooldownTerminated(float **gridTemperatures){
+
+
+
+    float newAverageTemp = getAvgTemperature(gridTemperatures);
+    cout << "new average : "<< newAverageTemp << endl;
+
+    float differenceBetweenMinMaxValueToStopCooldown = 1;
+
+    float differenceBetweenMinMaxValue = lastAverageTemp - newAverageTemp;
+
+    lastAverageTemp = newAverageTemp;
+
+    cout << "ON TERMINE (" << differenceBetweenMinMaxValue << " - " << differenceBetweenMinMaxValueToStopCooldown << "?" << (differenceBetweenMinMaxValue < differenceBetweenMinMaxValueToStopCooldown) << endl;
+
+    return differenceBetweenMinMaxValue < differenceBetweenMinMaxValueToStopCooldown;
+}
+
 int main( int argc, char *argv[] )
 {
 	int myrank;
@@ -139,6 +186,9 @@ int main( int argc, char *argv[] )
 	MPI_Init (&argc, &argv);
 	MPI_Comm_get_parent (&parent);
 	MPI_Comm_rank (MPI_COMM_WORLD,&myrank);
+	bool isNotEnd = true;
+	MPI_Request requestNull;
+
 
 	if (parent == MPI_COMM_NULL) {
 		printf ("Coordinateur : Pas de pere !\n");
@@ -152,7 +202,7 @@ int main( int argc, char *argv[] )
 		MPI_Recv(&cols, 1, MPI_INT, 0, 0, parent, &etat);
 		printf ("Coordinateur : Reception du nombre de colonnes %d !\n", cols);
 
-        for(int i =0;i< 9;i++) {
+        for(int i =0;i< 12;i++) {
             float* temp = new float[10];
             temp[0] = 0;
             temp[1] = 0;
@@ -167,26 +217,34 @@ int main( int argc, char *argv[] )
             temperatures[i] =  temp;
         }
 
-		for (int i=1; i<10; i++)	{
-			for (int j=1; j<cols * rows + 1; j++)	{
+		while(isNotEnd)	{
 
-		        float temperatureToSend = temperature;
+            //On continue le processus
+            for (int j=1; j<cols * rows + 1; j++)	{
+                //Si il n'y a plus assez de refroidissement
 
-				//printf ("Coordinateur : Envoi vers l'esclave n°%d de la temperature ambiante (%f°C).\n", j, temperature);
-				MPI_Send (&temperature, 1, MPI_FLOAT,j, 0, MPI_COMM_WORLD);
+                if(isCooldownTerminated(temperatures)) {
+                    isNotEnd = false;
+                    temperature = -500;
+                }
 
-			}
+                //printf ("Coordinateur : Envoi vers l'esclave n°%d de la temperature ambiante (%f°C).\n", j, temperature);
+                MPI_Send (&temperature, 1, MPI_FLOAT,j, 0, MPI_COMM_WORLD);
+            }
 
-			for (int k=1; k<cols * rows + 1; k++)	{
+            if(temperature == -500){
 
-                float* storeTemperature = new float[9];
-				MPI_Recv(storeTemperature, 10, MPI_FLOAT,k, 0, MPI_COMM_WORLD, &etat);
+                for (int k=1; k<cols * rows + 1; k++)	{
 
-                //On met a jour les temperatures de la grille globale avec ce qu'on reçoit des esclaves
-				temperatures[k-1] = storeTemperature;
-			}
+                    float* storeTemperature = new float[9];
+                    MPI_Recv(storeTemperature, 10, MPI_FLOAT,k, 0, MPI_COMM_WORLD, &etat);
 
-			printSVG(temperatures,rows,cols, temperature);
+                    //On met a jour les temperatures de la grille globale avec ce qu'on reçoit des esclaves
+                    temperatures[k-1] = storeTemperature;
+                }
+
+                printSVG(temperatures,rows,cols, temperature);
+            }
 		}
 
 		char response = 'K';
