@@ -134,7 +134,10 @@ float getAvgTemperature(float **gridTemperatures)
     float totalTemperature = 0.0f;
 
     //cout << "VALEURS de grid " << gridTemperatures[9][0] << endl;
-
+    printf("%f|%f|%f|\n%f|%f|%f|\n%f|%f|%f|",
+    gridTemperatures[0][1],gridTemperatures[0][2],gridTemperatures[0][3],
+    gridTemperatures[0][4],gridTemperatures[0][5],gridTemperatures[0][6],
+    gridTemperatures[0][7],gridTemperatures[0][8],gridTemperatures[0][9]);
     for(int i=0; i<12; i++)
     {
         float gridTemp = 0.0f;
@@ -163,13 +166,15 @@ bool isCooldownTerminated(float **gridTemperatures){
     float newAverageTemp = getAvgTemperature(gridTemperatures);
     cout << "new average : "<< newAverageTemp << endl;
 
-    float differenceBetweenMinMaxValueToStopCooldown = 1;
+    float differenceBetweenMinMaxValueToStopCooldown = 0.1;
 
     float differenceBetweenMinMaxValue = lastAverageTemp - newAverageTemp;
 
+printf("OLD: %f\n", lastAverageTemp);
+printf("NEW: %f\n", newAverageTemp);
     lastAverageTemp = newAverageTemp;
 
-    cout << "ON TERMINE (" << differenceBetweenMinMaxValue << " - " << differenceBetweenMinMaxValueToStopCooldown << "?" << (differenceBetweenMinMaxValue < differenceBetweenMinMaxValueToStopCooldown) << endl;
+    cout << "ON TERMINE (" << differenceBetweenMinMaxValue << " < " << differenceBetweenMinMaxValueToStopCooldown << ") ? :" << (differenceBetweenMinMaxValue < differenceBetweenMinMaxValueToStopCooldown) << endl;
 
     return differenceBetweenMinMaxValue < differenceBetweenMinMaxValueToStopCooldown;
 }
@@ -204,35 +209,34 @@ int main( int argc, char *argv[] )
 
         for(int i =0;i< 12;i++) {
             float* temp = new float[10];
-            temp[0] = 0;
-            temp[1] = 0;
-            temp[2] = 0;
-            temp[3] = 0;
-            temp[4] = 0;
-            temp[5] = 0;
-            temp[6] = 0;
-            temp[7] = 0;
-            temp[8] = 0;
-            temp[9] = 0;
+            temp[0] = 100;
+            temp[1] = 100;
+            temp[2] = 100;
+            temp[3] = 100;
+            temp[4] = 100;
+            temp[5] = 100;
+            temp[6] = 100;
+            temp[7] = 100;
+            temp[8] = 100;
+            temp[9] = 100;
             temperatures[i] =  temp;
         }
 
 		while(isNotEnd)	{
 
+            if(isCooldownTerminated(temperatures)) {
+                isNotEnd = false;
+                temperature = -500;
+            }
+
             //On continue le processus
             for (int j=1; j<cols * rows + 1; j++)	{
                 //Si il n'y a plus assez de refroidissement
-
-                if(isCooldownTerminated(temperatures)) {
-                    isNotEnd = false;
-                    temperature = -500;
-                }
-
                 //printf ("Coordinateur : Envoi vers l'esclave n°%d de la temperature ambiante (%f°C).\n", j, temperature);
                 MPI_Send (&temperature, 1, MPI_FLOAT,j, 0, MPI_COMM_WORLD);
             }
 
-            if(temperature == -500){
+            if(temperature != -500){
 
                 for (int k=1; k<cols * rows + 1; k++)	{
 
